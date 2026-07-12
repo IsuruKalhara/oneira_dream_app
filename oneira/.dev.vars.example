@@ -1,0 +1,26 @@
+# Copy to .dev.vars and `set -a; source .dev.vars; set +a` before running,
+# or export these in your shell. All are optional — defaults run fully offline.
+
+# ---- providers -------------------------------------------------------------
+# EMBEDDINGS_PROVIDER: stub (default, offline) | openai | voyage
+#   NOTE: changing this requires re-running `npm run ingest` (the index is
+#   tied to one embedding space).
+EMBEDDINGS_PROVIDER=stub
+
+# LLM_PROVIDER: stub (default, offline) | claude
+LLM_PROVIDER=stub
+
+# ---- Claude (when LLM_PROVIDER=claude) -------------------------------------
+ANTHROPIC_API_KEY=
+CLAUDE_MODEL=claude-opus-4-8
+CLAUDE_EFFORT=medium        # low | medium | high | xhigh | max
+
+# ---- embeddings (when EMBEDDINGS_PROVIDER=openai|voyage) --------------------
+OPENAI_API_KEY=
+OPENAI_EMBED_MODEL=text-embedding-3-small
+VOYAGE_API_KEY=
+VOYAGE_EMBED_MODEL=voyage-3.5-lite
+
+# ---- misc ------------------------------------------------------------------
+TOP_K=6
+PORT=8787

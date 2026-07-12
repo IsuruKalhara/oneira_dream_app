@@ -1,0 +1,7 @@
+node_modules/
+data/raw/
+data/index.json
+.dev.vars
+.env
+*.log
+.DS_Store

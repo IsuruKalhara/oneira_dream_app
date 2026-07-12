@@ -1,0 +1,29 @@
+name = "oneira-proxy"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# Non-secret config (safe to commit).
+[vars]
+EMBEDDINGS_PROVIDER = "openai"        # "openai" | "voyage" (must match the KB build)
+OPENAI_EMBED_MODEL = "text-embedding-3-small"
+VOYAGE_EMBED_MODEL = "voyage-3.5-lite"
+CLAUDE_MODEL = "claude-opus-4-8"      # "claude-sonnet-5" for lower per-call cost
+CLAUDE_EFFORT = "medium"
+TOP_K = "6"
+
+# Quota counters. Create with: npx wrangler kv namespace create RATE_LIMIT
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "PASTE_KV_NAMESPACE_ID_HERE"
+
+# Shared knowledge base. Create with:
+#   npx wrangler vectorize create oneira-kb --dimensions=1536 --metric=cosine
+# (1536 = text-embedding-3-small; use 1024 for voyage-3.5-lite)
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "oneira-kb"
+
+# Secrets (NOT here — set with `wrangler secret put`):
+#   ANTHROPIC_API_KEY
+#   OPENAI_API_KEY   (or VOYAGE_API_KEY)
+#   REVENUECAT_API_KEY   (optional; without it every user is 'free')

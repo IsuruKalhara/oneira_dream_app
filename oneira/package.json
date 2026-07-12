@@ -1,0 +1,19 @@
+{
+  "name": "oneira",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Oneira (working name) — public-domain dream-interpretation knowledge base + /explain RAG API. Phase 0.",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "download": "node scripts/download.mjs",
+    "ingest": "node scripts/ingest.mjs",
+    "add": "node scripts/add-source.mjs",
+    "explain": "node scripts/explain-cli.mjs",
+    "serve": "node src/server.mjs",
+    "push": "node scripts/push-vectorize.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0"
+  }
+}

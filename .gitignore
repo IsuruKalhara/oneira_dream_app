@@ -1,0 +1,27 @@
+# ── OS ──
+.DS_Store
+Thumbs.db
+*.log
+
+# ── Secrets — NEVER commit real keys ──
+**/.dev.vars
+**/.env
+**/.env.local
+*.pem
+*.key
+**/service-account*.json
+
+# ── Node (oneira backend + worker) ──
+**/node_modules/
+**/.wrangler/
+
+# ── Generated / large data (regenerate: npm run download && npm run ingest) ──
+oneira/data/raw/
+oneira/data/index.json
+oneira/data/vectorize.ndjson
+
+# ── Flutter build artifacts (oneira_app/.gitignore has the full list) ──
+**/.dart_tool/
+**/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
