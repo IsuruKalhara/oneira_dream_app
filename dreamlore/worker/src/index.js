@@ -35,6 +35,20 @@ const SAFE_MESSAGE =
   "(UK & Ireland), or find a local line at findahelpline.com. If you are in immediate " +
   "danger, call your local emergency number.";
 
+// A dream longer than this is not a dream, it is someone probing what a large
+// prompt costs us. A genuine recollection typed at 6am is a few hundred
+// characters; Miller's longest entry is well under this.
+const MAX_DREAM_CHARS = 4000;
+
+// Two ceilings that do not depend on the client behaving.
+//
+// X-Device-Token is chosen by the caller, so per-device quota is advisory: send
+// a new random token and you get a fresh allowance. That is fine against honest
+// use and useless against anyone who reads this file. These are the caps that
+// actually bound the bill. Both are overridable from [vars].
+const GLOBAL_DAILY_CALLS = 500;   // whole deployment, every user combined
+const IP_DAILY_CALLS = 20;        // one address; rotating IPs is real work
+
 const LIMITS = {
   free: { explain: { day: 1, month: 5 } },
   paid: { explain: { day: 3, month: 50 } },
@@ -77,6 +91,12 @@ export default {
       }
       const dream = String(body?.dream || '').trim();
       if (!dream) return json({ error: 'missing "dream" field' }, 400);
+      if (dream.length > MAX_DREAM_CHARS) {
+        return json(
+          { error: `Dream is too long (${dream.length} characters, limit ${MAX_DREAM_CHARS}).` },
+          413,
+        );
+      }
 
       // Server-side safety backstop (the app checks first). Returns a
       // schema-shaped supportive response — does NOT consume quota or hit Claude.
@@ -88,6 +108,16 @@ export default {
           quotes: [],
           provider: 'safety',
         });
+      }
+
+      // Abuse ceilings. Checked after the crisis branch on purpose: someone in
+      // distress must never be turned away by a rate limit.
+      const abuse = await checkAbuseCeilings(env, request);
+      if (!abuse.allowed) {
+        return json(
+          { error: 'Service is busy. Please try again later.', retryAfter: abuse.resetsAt },
+          429,
+        );
       }
 
       const quota = await checkAndIncrement(env, deviceToken, 'explain', tier);
@@ -243,6 +273,27 @@ async function kvInc(env, k) {
   return v;
 }
 
+// Ceilings that hold regardless of what the client claims to be. The global one
+// is the backstop on the bill: whatever else goes wrong, the deployment cannot
+// make more than GLOBAL_DAILY_CALLS paid model calls in a day.
+async function checkAbuseCeilings(env, request) {
+  const day = dayKey();
+  const globalCap = Number(env.GLOBAL_DAILY_CALLS || GLOBAL_DAILY_CALLS);
+  const ipCap = Number(env.IP_DAILY_CALLS || IP_DAILY_CALLS);
+
+  const used = await kvGet(env, `rl:__global:${day}`);
+  if (used >= globalCap) return { allowed: false, resetsAt: nextMidnight() };
+
+  const ip = request.headers.get('CF-Connecting-IP') || '';
+  if (ip) {
+    const ipUsed = await kvGet(env, `rl:ip:${ip}:${day}`);
+    if (ipUsed >= ipCap) return { allowed: false, resetsAt: nextMidnight() };
+    await kvInc(env, `rl:ip:${ip}:${day}`);
+  }
+  await kvInc(env, `rl:__global:${day}`);
+  return { allowed: true };
+}
+
 async function checkAndIncrement(env, id, endpoint, tier) {
   const lim = LIMITS[tier]?.[endpoint];
   if (!lim) return { allowed: true, tier };
@@ -294,6 +345,10 @@ function nextMonth() { const d = new Date(); d.setUTCMonth(d.getUTCMonth() + 1, 
 function json(o, s = 200) {
   return cors(new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json' } }));
 }
+// CORS governs browsers only — curl and any script ignore it entirely, so this
+// is NOT what stops abuse. The ceilings in checkAbuseCeilings are. Left open
+// because the client is a native app that sends no Origin header; if a web
+// client is ever added, narrow this to its domain then.
 function cors(res) {
   const r = new Response(res.body, res);
   r.headers.set('Access-Control-Allow-Origin', '*');

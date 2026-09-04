@@ -11,6 +11,12 @@ LLM_PROVIDER = "openai"
 OPENAI_MODEL = "gpt-4o-mini"       # ~$0.001 per interpretation
 TOP_K = "6"
 
+# Abuse ceilings — the real backstop on the bill. X-Device-Token is chosen by
+# the caller, so per-device quota can be reset by sending a new token; these
+# cannot. Raise GLOBAL_DAILY_CALLS as real traffic grows.
+GLOBAL_DAILY_CALLS = "500"   # whole deployment per day (~$0.30 at current cost)
+IP_DAILY_CALLS = "20"        # one IP address per day
+
 # Only read when LLM_PROVIDER = "claude".
 CLAUDE_MODEL = "claude-sonnet-5"
 CLAUDE_EFFORT = "medium"
