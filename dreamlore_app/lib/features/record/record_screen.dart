@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/providers.dart';
+import '../../widgets/dream_image_card.dart';
 import '../../widgets/interpretation_view.dart';
 import '../../widgets/safety_view.dart';
 import '../paywall/paywall_screen.dart';
+import '../paywall/plus_upsell_sheet.dart';
 import 'record_controller.dart';
 
 class RecordScreen extends ConsumerStatefulWidget {
@@ -29,6 +31,10 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
 
     // Keep the text field in sync with live transcription without fighting edits.
     ref.listen(recordControllerProvider, (prev, next) {
+      if (next.imageNeedsPlus && !(prev?.imageNeedsPlus ?? false)) {
+        ref.read(entitlementProvider.notifier).refresh();
+        PlusUpsellSheet.show(context);
+      }
       if (next.transcript != _text.text) {
         _text.value = TextEditingValue(
           text: next.transcript,
@@ -168,12 +174,23 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
       );
 
   Widget _done(BuildContext context, RecordState state, RecordController ctl) {
+    final isPaid = ref.watch(entitlementProvider);
     return Column(
       children: [
         Expanded(
           child: InterpretationView(
             transcript: state.transcript,
             interp: state.interpretation!,
+            picture: DreamImageCard(
+              status: state.imageStatus,
+              locked: !isPaid,
+              bytes: state.imageBytes,
+              error: state.imageError,
+              // Free users get the offer, not a request that would only 403.
+              onGenerate: isPaid
+                  ? ctl.imagine
+                  : () => PlusUpsellSheet.show(context),
+            ),
           ),
         ),
         Padding(

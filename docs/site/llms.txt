@@ -1,0 +1,22 @@
+# Dreamlore
+
+> Dreamlore is a dream journal app by Bitfuzed for Android. It transcribes a spoken dream on the device, returns an interpretation grounded in public-domain dream literature with verbatim, verified quotes, can generate a picture of the dream, and stores the journal only on the phone. Free tier; Dreamlore Plus is a monthly or yearly subscription, the yearly plan with a 3-day free trial.
+
+## What it does
+- Voice or typed dream capture; speech is transcribed on-device, audio never uploaded.
+- Interpretation grounded in Freud's *The Interpretation of Dreams*, *Dream Psychology*, and Miller's *Ten Thousand Dreams Interpreted*. Every quote is checked word-for-word against the source before display.
+- Dream pictures (Plus): a painting generated from the dream text, saved with the entry.
+- Local-only journal and recurring-symbol insights. No ads, no ad ID.
+
+## What it is not
+Dreamlore is for reflection and journaling. It is not medical, psychological, or predictive advice, and is not a substitute for professional care. It detects expressed self-harm intent and shows crisis resources instead of an interpretation.
+
+## Pricing
+Free: limited readings per day and month. Dreamlore Plus: monthly or yearly via Google Play; yearly starts with a 3-day free trial. Prices are shown in the store in local currency.
+
+## Links
+- Website: https://tropicalai.net/dreamlore
+- Google Play: https://play.google.com/store/apps/details?id=com.bitfuzed.dreamlore
+- Privacy: https://tropicalai.net/dreamlore/privacy
+- Terms: https://tropicalai.net/dreamlore/terms
+- Company: Bitfuzed

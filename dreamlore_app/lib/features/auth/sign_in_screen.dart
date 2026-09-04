@@ -110,10 +110,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   icon: const Icon(Icons.g_mobiledata, size: 28),
                   label: const Text('Continue with Google'),
                 ),
-              // Development escape hatch: without it, a build with no Firebase
-              // project can't get past this screen at all. Absent from release
-              // builds, where sign-in is the real gate.
-              if (!configured && kDebugMode)
+              // Development escape hatch, so a build with no Firebase project
+              // or no OAuth client yet can still reach the app. Absent from
+              // release builds, where sign-in is the real gate.
+              if (kDebugMode)
                 TextButton(
                   onPressed: _busy
                       ? null

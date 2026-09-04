@@ -15,6 +15,10 @@ class DreamEntries extends Table {
   TextColumn get quotesJson => text().withDefault(const Constant('[]'))();
   TextColumn get model => text().withDefault(const Constant(''))();
 
+  /// Path of the generated dream picture inside the app's documents dir, or
+  /// empty. Only the path is stored; the bytes live as a file.
+  TextColumn get imagePath => text().withDefault(const Constant(''))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -24,7 +28,16 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          // v2: dream pictures. Additive, so existing journals carry on.
+          if (from < 2) await m.addColumn(dreamEntries, dreamEntries.imagePath);
+        },
+      );
 
   static QueryExecutor _open() => driftDatabase(name: 'dreamlore');
 
@@ -39,6 +52,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> upsert(DreamEntriesCompanion entry) =>
       into(dreamEntries).insertOnConflictUpdate(entry);
+
+  Future<void> setImagePath(String id, String path) =>
+      (update(dreamEntries)..where((t) => t.id.equals(id)))
+          .write(DreamEntriesCompanion(imagePath: Value(path)));
 
   Future<void> deleteById(String id) =>
       (delete(dreamEntries)..where((t) => t.id.equals(id))).go();

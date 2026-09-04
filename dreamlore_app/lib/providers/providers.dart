@@ -6,6 +6,7 @@ import '../data/repositories/dream_repository.dart';
 import '../data/api/dream_api.dart';
 import '../services/auth_service.dart';
 import '../services/billing_api.dart';
+import '../services/image_store.dart';
 import '../services/stt_service.dart';
 import '../services/settings_service.dart';
 import '../services/subscription_service.dart';
@@ -32,6 +33,8 @@ final sttServiceProvider = Provider<SttService>((ref) {
   ref.onDispose(s.dispose);
   return s;
 });
+
+final imageStoreProvider = Provider<ImageStore>((ref) => ImageStore());
 
 final settingsServiceProvider = Provider<SettingsService>(
     (ref) => SettingsService(ref.watch(sharedPreferencesProvider)));

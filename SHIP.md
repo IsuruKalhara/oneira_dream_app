@@ -19,6 +19,12 @@ Bitfuzed/
 - Subscriptions: **direct Google Play Billing** (Google's own `in_app_purchase`
   plugin, no third-party billing service). Monthly + yearly products, yearly
   carrying a 3-day free trial; plan switching handled as a Play replacement.
+- Dream pictures (Plus): `/imagine` on the Worker and dev server paints the dream
+  with `gpt-image-1` (low quality, ~1¢), Plus-only with its own quota; the app shows
+  a "See your dream" card after every reading, an animated wait, the reveal, and
+  saves the picture with the entry. Free users get an upsell sheet instead.
+- ASO / SEO / GEO playbook in `docs/GROWTH-ASO-SEO-GEO.md`; a ready-to-host landing
+  page with `SoftwareApplication` + `FAQPage` schema and `llms.txt` in `docs/site/`.
 - Server-side purchase verification: `/billing/verify` and `/billing/state` on the
   Worker check purchase tokens against the Play Developer API and cache the answer
   with its paid-through date, so a cancellation or refund actually ends the tier.
@@ -54,10 +60,11 @@ product ids match `dreamlore_app/lib/core/config.dart`:
 | `dreamlore_plus_yearly` | yearly, auto-renewing | **Free trial, 3 days**, new customers only |
 
 - [ ] Create both subscriptions, activate the base plans, and set prices.
-- [ ] Add the **3-day free trial offer** to the yearly base plan. The paywall's
-      "3-day free trial" copy comes from `Config.trialDays` — if you choose a
-      different length, change it there too, or the app promises something Play
-      will not honour.
+- [ ] Add the **3-day free trial offer** to the yearly base plan. The paywall
+      reads the trial length off the offer itself, so change it in Play Console
+      and the app follows — there is no constant to keep in step. A user who has
+      already used their trial is correctly shown the plan with no trial, because
+      Play stops returning that offer to them.
 - [ ] Upload a build to **Internal Testing** and add your account as a licence
       tester. Play only returns real products to an app installed *via Play* —
       a sideloaded debug build always shows "Plans unavailable".
@@ -105,7 +112,9 @@ unconfigured; it is compiled out of release builds.
 - [ ] Set `Config.privacyUrl` / `Config.termsUrl` in `dreamlore_app/lib/core/config.dart`.
 
 ### 5. Store submission
-- [ ] App icon + screenshots (list in `docs/STORE-LISTING.md`).
+- [ ] App icon + the seven screenshots in `docs/GROWTH-ASO-SEO-GEO.md` §2.
+- [ ] Host `docs/site/` at tropicalai.net/dreamlore (with `llms.txt`); add
+      `aggregateRating` to the schema once there are ≥ 5 Play ratings.
 - [ ] Listing copy, privacy labels, age rating, and review notes per `docs/STORE-LISTING.md`
       (keep it "reflection, not medical").
 - [ ] TestFlight / Play internal testing on real devices, then submit.

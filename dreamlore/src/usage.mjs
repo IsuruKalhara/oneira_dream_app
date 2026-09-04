@@ -37,6 +37,7 @@ export const LIMITS = {
   },
   paid: {
     explain: { day: Number(process.env.PAID_EXPLAIN_DAY || 3), month: Number(process.env.PAID_EXPLAIN_MONTH || 50) },
+    imagine: { day: 3, month: 30 }, // Plus only — no free entry, on purpose
     chat: { day: 30, month: 300 },
   },
 };

@@ -17,6 +17,7 @@ import { SYSTEM_PROMPT, EXPLAIN_SCHEMA, buildUserContent } from '../../src/promp
 import { makeRetriever } from '../../src/retrieve.mjs';
 import { getSubscription, isPlayConfigured, PlayApiError } from './play.js';
 import { entitlementFrom, isExpired, productIdsFromEnv } from './entitlements.js';
+import { buildImagePrompt, generateImage } from '../../src/imagine.mjs';
 import KB from './kb.json';
 
 // Built once per isolate: caches the tokenized headwords the ranking needs.
@@ -51,9 +52,12 @@ const MAX_DREAM_CHARS = 4000;
 const GLOBAL_DAILY_CALLS = 500;   // whole deployment, every user combined
 const IP_DAILY_CALLS = 20;        // one address; rotating IPs is real work
 
+// `imagine` has no free entry on purpose: a picture costs ~10× an explain call,
+// so it is the Plus feature, and a missing limit is what the route reads as
+// "not for this tier" (403 + upgrade:true).
 const LIMITS = {
   free: { explain: { day: 1, month: 5 } },
-  paid: { explain: { day: 3, month: 50 } },
+  paid: { explain: { day: 3, month: 50 }, imagine: { day: 3, month: 30 } },
 };
 
 export default {
@@ -151,6 +155,40 @@ export default {
           ...out,
           quota: { tier: quota.tier, day: quota.day, month: quota.month },
         });
+      } catch (e) {
+        return json({ error: String(e?.message || e) }, 502);
+      }
+    }
+
+    if (url.pathname === '/imagine' && request.method === 'POST') {
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ error: 'invalid JSON body' }, 400);
+      }
+      const dream = String(body?.dream || '').trim();
+      if (!dream) return json({ error: 'missing "dream" field' }, 400);
+      if (dream.length > MAX_DREAM_CHARS) return json({ error: 'Dream is too long.' }, 413);
+      // Never paint a crisis. Same backstop as /explain, same cost: none.
+      if (CRISIS.some((r) => r.test(dream))) {
+        return json({ error: 'This dream cannot be illustrated.', safety: true }, 422);
+      }
+      if (!LIMITS[tier]?.imagine) {
+        return json({ error: 'Dream pictures are part of Dreamlore Plus.', upgrade: true }, 403);
+      }
+      const abuse = await checkAbuseCeilings(env, request);
+      if (!abuse.allowed) {
+        return json({ error: 'Service is busy. Please try again later.', retryAfter: abuse.resetsAt }, 429);
+      }
+      const quota = await checkAndIncrement(env, deviceToken, 'imagine', tier);
+      if (!quota.allowed) {
+        return json({ error: `${quota.reason} limit reached`, ...quota, upgrade: false }, 429);
+      }
+      try {
+        const prompt = buildImagePrompt(dream, Array.isArray(body?.symbols) ? body.symbols : []);
+        const img = await generateImage({ apiKey: env.OPENAI_API_KEY, prompt });
+        return json({ image: img.b64, mime: img.mime, model: img.model, quota: { tier, day: quota.day, month: quota.month } });
       } catch (e) {
         return json({ error: String(e?.message || e) }, 502);
       }

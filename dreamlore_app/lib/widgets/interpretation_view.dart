@@ -8,11 +8,16 @@ class InterpretationView extends StatelessWidget {
   final Interpretation interp;
   final EdgeInsetsGeometry padding;
 
+  /// The dream's picture (or the invitation to make one), shown right under
+  /// the dream itself — the image belongs to the dream, not to the reading.
+  final Widget? picture;
+
   const InterpretationView({
     super.key,
     required this.transcript,
     required this.interp,
     this.padding = const EdgeInsets.all(16),
+    this.picture,
   });
 
   @override
@@ -28,6 +33,10 @@ class InterpretationView extends StatelessWidget {
             child: Text(transcript, style: t.textTheme.bodyMedium),
           ),
         ),
+        if (picture != null) ...[
+          const SizedBox(height: 14),
+          picture!,
+        ],
         const SizedBox(height: 22),
         _label(context, 'INTERPRETATION'),
         Text(interp.explanation, style: t.textTheme.bodyLarge?.copyWith(height: 1.5)),

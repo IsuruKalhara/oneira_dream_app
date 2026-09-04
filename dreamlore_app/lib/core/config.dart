@@ -34,10 +34,10 @@ class Config {
     defaultValue: 'dreamlore_plus_yearly',
   );
 
-  /// Length of the yearly plan's free trial, in days. This is *display only* —
-  /// the real trial is whatever the Play Console offer says. Keep the two in
-  /// step, or the paywall promises something Play will not honour.
-  static const int trialDays = 3;
+  // The free trial's length is deliberately NOT configured here. The paywall
+  // reads it from the Play offer itself (SubscriptionService.trialDays), so it
+  // always matches what Play Console is set to, and it correctly shows no trial
+  // to someone who has already used theirs.
 
   /// The tier name the Worker grants a subscriber (see worker/src/index.js).
   static const String paidTier = 'paid';

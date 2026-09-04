@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/config.dart';
 import '../../providers/providers.dart';
 import '../../services/subscription_service.dart';
 import 'purchase_success_screen.dart';
@@ -37,8 +36,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// The trial length Play will actually honour for this user on the yearly
   /// plan, resolved from the offer once prices load. Null means no trial —
   /// which is the truth for someone who has already used theirs, and the copy
-  /// must not keep promising one. [Config.trialDays] is only the placeholder
-  /// shown while the store is still answering.
+  /// must not keep promising one. Nothing here hardcodes a number, so the
+  /// paywall can never advertise a trial Play won't give.
   int? _trialDays;
   bool get _hasTrial => _trialDays != null;
 
@@ -132,7 +131,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           if (!mounted) return;
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => PurchaseSuccessScreen(period: _period),
+              builder: (_) => PurchaseSuccessScreen(
+                period: _period,
+                trialDays: _trialDays,
+              ),
             ),
           );
           if (!mounted) return;

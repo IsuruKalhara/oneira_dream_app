@@ -98,6 +98,18 @@ class $DreamEntriesTable extends DreamEntries
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _imagePathMeta = const VerificationMeta(
+    'imagePath',
+  );
+  @override
+  late final GeneratedColumn<String> imagePath = GeneratedColumn<String>(
+    'image_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -108,6 +120,7 @@ class $DreamEntriesTable extends DreamEntries
     symbolsJson,
     quotesJson,
     model,
+    imagePath,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -178,6 +191,12 @@ class $DreamEntriesTable extends DreamEntries
         model.isAcceptableOrUnknown(data['model']!, _modelMeta),
       );
     }
+    if (data.containsKey('image_path')) {
+      context.handle(
+        _imagePathMeta,
+        imagePath.isAcceptableOrUnknown(data['image_path']!, _imagePathMeta),
+      );
+    }
     return context;
   }
 
@@ -219,6 +238,10 @@ class $DreamEntriesTable extends DreamEntries
         DriftSqlType.string,
         data['${effectivePrefix}model'],
       )!,
+      imagePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_path'],
+      )!,
     );
   }
 
@@ -237,6 +260,10 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
   final String symbolsJson;
   final String quotesJson;
   final String model;
+
+  /// Path of the generated dream picture inside the app's documents dir, or
+  /// empty. Only the path is stored; the bytes live as a file.
+  final String imagePath;
   const DreamEntry({
     required this.id,
     required this.createdAt,
@@ -246,6 +273,7 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
     required this.symbolsJson,
     required this.quotesJson,
     required this.model,
+    required this.imagePath,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -258,6 +286,7 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
     map['symbols_json'] = Variable<String>(symbolsJson);
     map['quotes_json'] = Variable<String>(quotesJson);
     map['model'] = Variable<String>(model);
+    map['image_path'] = Variable<String>(imagePath);
     return map;
   }
 
@@ -271,6 +300,7 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
       symbolsJson: Value(symbolsJson),
       quotesJson: Value(quotesJson),
       model: Value(model),
+      imagePath: Value(imagePath),
     );
   }
 
@@ -288,6 +318,7 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
       symbolsJson: serializer.fromJson<String>(json['symbolsJson']),
       quotesJson: serializer.fromJson<String>(json['quotesJson']),
       model: serializer.fromJson<String>(json['model']),
+      imagePath: serializer.fromJson<String>(json['imagePath']),
     );
   }
   @override
@@ -302,6 +333,7 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
       'symbolsJson': serializer.toJson<String>(symbolsJson),
       'quotesJson': serializer.toJson<String>(quotesJson),
       'model': serializer.toJson<String>(model),
+      'imagePath': serializer.toJson<String>(imagePath),
     };
   }
 
@@ -314,6 +346,7 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
     String? symbolsJson,
     String? quotesJson,
     String? model,
+    String? imagePath,
   }) => DreamEntry(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
@@ -323,6 +356,7 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
     symbolsJson: symbolsJson ?? this.symbolsJson,
     quotesJson: quotesJson ?? this.quotesJson,
     model: model ?? this.model,
+    imagePath: imagePath ?? this.imagePath,
   );
   DreamEntry copyWithCompanion(DreamEntriesCompanion data) {
     return DreamEntry(
@@ -344,6 +378,7 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
           ? data.quotesJson.value
           : this.quotesJson,
       model: data.model.present ? data.model.value : this.model,
+      imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
     );
   }
 
@@ -357,7 +392,8 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
           ..write('reflection: $reflection, ')
           ..write('symbolsJson: $symbolsJson, ')
           ..write('quotesJson: $quotesJson, ')
-          ..write('model: $model')
+          ..write('model: $model, ')
+          ..write('imagePath: $imagePath')
           ..write(')'))
         .toString();
   }
@@ -372,6 +408,7 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
     symbolsJson,
     quotesJson,
     model,
+    imagePath,
   );
   @override
   bool operator ==(Object other) =>
@@ -384,7 +421,8 @@ class DreamEntry extends DataClass implements Insertable<DreamEntry> {
           other.reflection == this.reflection &&
           other.symbolsJson == this.symbolsJson &&
           other.quotesJson == this.quotesJson &&
-          other.model == this.model);
+          other.model == this.model &&
+          other.imagePath == this.imagePath);
 }
 
 class DreamEntriesCompanion extends UpdateCompanion<DreamEntry> {
@@ -396,6 +434,7 @@ class DreamEntriesCompanion extends UpdateCompanion<DreamEntry> {
   final Value<String> symbolsJson;
   final Value<String> quotesJson;
   final Value<String> model;
+  final Value<String> imagePath;
   final Value<int> rowid;
   const DreamEntriesCompanion({
     this.id = const Value.absent(),
@@ -406,6 +445,7 @@ class DreamEntriesCompanion extends UpdateCompanion<DreamEntry> {
     this.symbolsJson = const Value.absent(),
     this.quotesJson = const Value.absent(),
     this.model = const Value.absent(),
+    this.imagePath = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DreamEntriesCompanion.insert({
@@ -417,6 +457,7 @@ class DreamEntriesCompanion extends UpdateCompanion<DreamEntry> {
     this.symbolsJson = const Value.absent(),
     this.quotesJson = const Value.absent(),
     this.model = const Value.absent(),
+    this.imagePath = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        createdAt = Value(createdAt),
@@ -430,6 +471,7 @@ class DreamEntriesCompanion extends UpdateCompanion<DreamEntry> {
     Expression<String>? symbolsJson,
     Expression<String>? quotesJson,
     Expression<String>? model,
+    Expression<String>? imagePath,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -441,6 +483,7 @@ class DreamEntriesCompanion extends UpdateCompanion<DreamEntry> {
       if (symbolsJson != null) 'symbols_json': symbolsJson,
       if (quotesJson != null) 'quotes_json': quotesJson,
       if (model != null) 'model': model,
+      if (imagePath != null) 'image_path': imagePath,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -454,6 +497,7 @@ class DreamEntriesCompanion extends UpdateCompanion<DreamEntry> {
     Value<String>? symbolsJson,
     Value<String>? quotesJson,
     Value<String>? model,
+    Value<String>? imagePath,
     Value<int>? rowid,
   }) {
     return DreamEntriesCompanion(
@@ -465,6 +509,7 @@ class DreamEntriesCompanion extends UpdateCompanion<DreamEntry> {
       symbolsJson: symbolsJson ?? this.symbolsJson,
       quotesJson: quotesJson ?? this.quotesJson,
       model: model ?? this.model,
+      imagePath: imagePath ?? this.imagePath,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -496,6 +541,9 @@ class DreamEntriesCompanion extends UpdateCompanion<DreamEntry> {
     if (model.present) {
       map['model'] = Variable<String>(model.value);
     }
+    if (imagePath.present) {
+      map['image_path'] = Variable<String>(imagePath.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -513,6 +561,7 @@ class DreamEntriesCompanion extends UpdateCompanion<DreamEntry> {
           ..write('symbolsJson: $symbolsJson, ')
           ..write('quotesJson: $quotesJson, ')
           ..write('model: $model, ')
+          ..write('imagePath: $imagePath, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -540,6 +589,7 @@ typedef $$DreamEntriesTableCreateCompanionBuilder =
       Value<String> symbolsJson,
       Value<String> quotesJson,
       Value<String> model,
+      Value<String> imagePath,
       Value<int> rowid,
     });
 typedef $$DreamEntriesTableUpdateCompanionBuilder =
@@ -552,6 +602,7 @@ typedef $$DreamEntriesTableUpdateCompanionBuilder =
       Value<String> symbolsJson,
       Value<String> quotesJson,
       Value<String> model,
+      Value<String> imagePath,
       Value<int> rowid,
     });
 
@@ -601,6 +652,11 @@ class $$DreamEntriesTableFilterComposer
 
   ColumnFilters<String> get model => $composableBuilder(
     column: $table.model,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -653,6 +709,11 @@ class $$DreamEntriesTableOrderingComposer
     column: $table.model,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DreamEntriesTableAnnotationComposer
@@ -697,6 +758,9 @@ class $$DreamEntriesTableAnnotationComposer
 
   GeneratedColumn<String> get model =>
       $composableBuilder(column: $table.model, builder: (column) => column);
+
+  GeneratedColumn<String> get imagePath =>
+      $composableBuilder(column: $table.imagePath, builder: (column) => column);
 }
 
 class $$DreamEntriesTableTableManager
@@ -738,6 +802,7 @@ class $$DreamEntriesTableTableManager
                 Value<String> symbolsJson = const Value.absent(),
                 Value<String> quotesJson = const Value.absent(),
                 Value<String> model = const Value.absent(),
+                Value<String> imagePath = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DreamEntriesCompanion(
                 id: id,
@@ -748,6 +813,7 @@ class $$DreamEntriesTableTableManager
                 symbolsJson: symbolsJson,
                 quotesJson: quotesJson,
                 model: model,
+                imagePath: imagePath,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -760,6 +826,7 @@ class $$DreamEntriesTableTableManager
                 Value<String> symbolsJson = const Value.absent(),
                 Value<String> quotesJson = const Value.absent(),
                 Value<String> model = const Value.absent(),
+                Value<String> imagePath = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DreamEntriesCompanion.insert(
                 id: id,
@@ -770,6 +837,7 @@ class $$DreamEntriesTableTableManager
                 symbolsJson: symbolsJson,
                 quotesJson: quotesJson,
                 model: model,
+                imagePath: imagePath,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -15,6 +15,7 @@ import {
   estimateCostUsd,
   LIMITS,
 } from './usage.mjs';
+import { buildImagePrompt, generateImage } from './imagine.mjs';
 
 // Dev store. In production this is Cloudflare KV or a Durable Object.
 const store = createMemoryStore();
@@ -85,6 +86,25 @@ const server = http.createServer(async (req, res) => {
         : 0,
       state: 'dev',
     });
+  }
+
+  // Dream pictures — Plus only. Mirrors the Worker route; see imagine.mjs.
+  if (req.method === 'POST' && url.pathname === '/imagine') {
+    try {
+      const body = await readJson(req);
+      if (!body.dream) return json(res, 400, { error: 'missing "dream" field' });
+      const tier = await resolveTier(identity, req.headers);
+      if (!LIMITS[tier]?.imagine) {
+        return json(res, 403, { error: 'Dream pictures are part of Dreamlore Plus.', upgrade: true });
+      }
+      const quota = await checkAndIncrement(store, { identity, endpoint: 'imagine', tier });
+      if (!quota.allowed) return json(res, 429, { error: `${quota.reason} limit reached`, ...quota });
+      const prompt = buildImagePrompt(body.dream, body.symbols || []);
+      const img = await generateImage({ apiKey: process.env.OPENAI_API_KEY, prompt });
+      return json(res, 200, { image: img.b64, mime: img.mime, model: img.model });
+    } catch (e) {
+      return json(res, 502, { error: String(e?.message || e) });
+    }
   }
 
   if (req.method === 'POST' && url.pathname === '/explain') {

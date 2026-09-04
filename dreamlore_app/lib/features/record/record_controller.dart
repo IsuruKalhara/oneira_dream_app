@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../data/api/dream_api.dart';
 import '../../data/models.dart';
 import '../../data/safety.dart';
+import '../../widgets/dream_image_card.dart';
 import '../../services/stt_service.dart';
 import '../../providers/providers.dart';
 
@@ -17,6 +21,16 @@ class RecordState {
   final String? error;
   final String? savedId;
 
+  /// The dream's picture, generated after the reading. Kept in memory until
+  /// the dream is saved, when it is written next to the entry.
+  final Uint8List? imageBytes;
+  final DreamImageStatus imageStatus;
+  final String? imageError;
+
+  /// True when the proxy refused a picture because this device isn't on Plus
+  /// — the UI shows the upgrade rather than an error.
+  final bool imageNeedsPlus;
+
   const RecordState({
     this.status = RecordStatus.idle,
     this.transcript = '',
@@ -25,6 +39,10 @@ class RecordState {
     this.quotaError,
     this.error,
     this.savedId,
+    this.imageBytes,
+    this.imageStatus = DreamImageStatus.idle,
+    this.imageError,
+    this.imageNeedsPlus = false,
   });
 
   RecordState copyWith({
@@ -35,6 +53,10 @@ class RecordState {
     String? savedId,
     QuotaExceededException? quotaError, // transient: cleared unless passed
     String? error, // transient: cleared unless passed
+    Uint8List? imageBytes,
+    DreamImageStatus? imageStatus,
+    String? imageError, // transient
+    bool imageNeedsPlus = false, // transient
   }) =>
       RecordState(
         status: status ?? this.status,
@@ -44,6 +66,10 @@ class RecordState {
         savedId: savedId ?? this.savedId,
         quotaError: quotaError,
         error: error,
+        imageBytes: imageBytes ?? this.imageBytes,
+        imageStatus: imageStatus ?? this.imageStatus,
+        imageError: imageError,
+        imageNeedsPlus: imageNeedsPlus,
       );
 }
 
@@ -114,15 +140,57 @@ class RecordController extends Notifier<RecordState> {
     }
   }
 
+  /// Paints the dream. The caller has already decided this device may (it
+  /// checks the entitlement first and shows the upsell otherwise); the proxy
+  /// still has the final say, and a 403 here means the entitlement lapsed.
+  Future<void> imagine() async {
+    final interp = state.interpretation;
+    final text = state.transcript.trim();
+    if (interp == null || text.isEmpty) return;
+    if (state.imageStatus == DreamImageStatus.generating) return;
+
+    state = state.copyWith(imageStatus: DreamImageStatus.generating);
+    try {
+      final bytes = await ref
+          .read(dreamApiProvider)
+          .imagine(text, symbols: interp.symbols);
+      state = state.copyWith(
+        imageStatus: DreamImageStatus.ready,
+        imageBytes: bytes,
+      );
+      ref.invalidate(quotaProvider);
+    } on PlusRequiredException {
+      state = state.copyWith(
+        imageStatus: DreamImageStatus.idle,
+        imageNeedsPlus: true,
+      );
+    } on QuotaExceededException catch (e) {
+      state = state.copyWith(
+        imageStatus: DreamImageStatus.error,
+        imageError: e.reason == 'monthly'
+            ? "You've painted all your dreams for this month."
+            : "You've painted all your dreams for today.",
+      );
+    } catch (_) {
+      state = state.copyWith(imageStatus: DreamImageStatus.error);
+    }
+  }
+
   Future<String?> save() async {
     final interp = state.interpretation;
     if (interp == null) return null;
     final id = const Uuid().v4();
+    var imagePath = '';
+    final bytes = state.imageBytes;
+    if (bytes != null) {
+      imagePath = await ref.read(imageStoreProvider).save(id, bytes);
+    }
     await ref.read(dreamRepositoryProvider).save(
           id: id,
           createdAt: DateTime.now(),
           transcript: state.transcript.trim(),
           interp: interp,
+          imagePath: imagePath,
         );
     state = state.copyWith(savedId: id);
     return id;

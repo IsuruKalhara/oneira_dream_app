@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -48,6 +50,13 @@ class JournalScreen extends ConsumerWidget {
               final symbols =
                   e.symbolList.take(3).map((s) => s.symbol).join(' · ');
               return ListTile(
+                leading: e.imagePath.isEmpty
+                    ? null
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.file(File(e.imagePath),
+                            width: 48, height: 48, fit: BoxFit.cover),
+                      ),
                 title: Text(e.transcript,
                     maxLines: 1, overflow: TextOverflow.ellipsis),
                 subtitle: Text(

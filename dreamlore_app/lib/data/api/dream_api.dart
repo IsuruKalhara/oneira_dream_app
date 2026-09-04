@@ -1,6 +1,14 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import '../../core/config.dart';
 import '../models.dart';
+
+/// Thrown when the proxy says a picture is a Plus feature (403 + upgrade).
+class PlusRequiredException implements Exception {
+  const PlusRequiredException();
+}
 
 class ExplainResult {
   final Interpretation interpretation;
@@ -60,6 +68,31 @@ class DreamApi {
       );
     }
     return ExplainResult(Interpretation.fromJson(data), quota);
+  }
+
+  /// Turns a dream into a picture. Plus only: the proxy answers 403 for the
+  /// free tier, which surfaces here as [PlusRequiredException] so the UI can
+  /// offer the upgrade instead of an error. Pictures can take 20-40 s.
+  Future<Uint8List> imagine(String dream, {List<DreamSymbol> symbols = const []}) async {
+    final res = await _dio.post(
+      '/imagine',
+      data: {'dream': dream, 'symbols': symbols.map((s) => s.symbol).toList()},
+      options: Options(receiveTimeout: const Duration(seconds: 90)),
+    );
+    if (res.statusCode == 403) throw const PlusRequiredException();
+    if (res.statusCode == 429) {
+      final d = (res.data as Map).cast<String, dynamic>();
+      final err = (d['error'] ?? '').toString();
+      throw QuotaExceededException(
+        err.contains('month') ? 'monthly' : 'daily',
+        resetsAt: d['resetsAt'] is String ? DateTime.tryParse(d['resetsAt']) : null,
+      );
+    }
+    if (res.statusCode != 200 || res.data is! Map) {
+      final msg = res.data is Map ? (res.data['error'] ?? '') : '';
+      throw Exception('Picture failed (${res.statusCode}) $msg');
+    }
+    return base64Decode((res.data as Map)['image'] as String);
   }
 
   Future<QuotaInfo?> usage() async {
