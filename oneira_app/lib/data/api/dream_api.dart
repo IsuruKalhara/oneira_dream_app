@@ -23,6 +23,11 @@ class DreamApi {
               headers: {
                 'content-type': 'application/json',
                 'x-device-token': deviceId,
+                // The proxy buckets daily/monthly quotas in the user's local
+                // day, not UTC's — without this a dream at 11pm and one the
+                // next morning could share a "day".
+                'x-tz-offset':
+                    DateTime.now().timeZoneOffset.inMinutes.toString(),
               },
               // Let us inspect 4xx bodies (e.g. 429) instead of throwing.
               validateStatus: (s) => s != null && s < 500,

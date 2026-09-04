@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config.dart';
+import '../../core/legal.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../providers/providers.dart';
+import '../../ui/night.dart';
+import '../../ui/scaffold.dart';
 import '../paywall/paywall_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -25,86 +29,126 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final t = Theme.of(context);
     final tier = ref.watch(quotaProvider).asData?.value?.tier ?? 'free';
     final deviceId = ref.read(deviceIdProvider);
+    final paid = tier == 'paid';
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
+    return NightScaffold(
+      title: 'Settings',
+      padded: false,
+      child: ListView(
+        // Explicit padding drops the extendBody inset — add the nav-bar
+        // clearance back or the disclaimer/device-id footer hides under it.
+        padding: EdgeInsets.fromLTRB(
+            22, 0, 22, 28 + MediaQuery.paddingOf(context).bottom),
         children: [
-          ListTile(
-            leading: const Icon(Icons.workspace_premium_outlined),
-            title: const Text('Plan'),
-            subtitle: Text(tier == 'paid' ? 'Oneira Plus' : 'Free'),
-            trailing: tier == 'paid'
-                ? null
-                : TextButton(
-                    onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const PaywallScreen())),
-                    child: const Text('Upgrade'),
-                  ),
+          _Group(
+            children: [
+              _Row(
+                icon: Icons.workspace_premium_outlined,
+                title: 'Plan',
+                subtitle: paid ? 'Oneira Plus' : 'Free',
+                trailing: paid
+                    ? null
+                    : TextButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (_) => const PaywallScreen()),
+                        ),
+                        child: const Text('Upgrade'),
+                      ),
+              ),
+              _Row(
+                icon: Icons.alarm,
+                title: 'Morning reminder',
+                subtitle: 'A gentle nudge to log your dream on waking',
+                trailing: Switch(
+                  value: _reminder,
+                  onChanged: (v) => _setReminder(v),
+                ),
+              ),
+            ],
           ),
-          SwitchListTile(
-            secondary: const Icon(Icons.alarm),
-            title: const Text('Morning reminder'),
-            subtitle: const Text('A gentle nudge to log your dream on waking'),
-            value: _reminder,
-            onChanged: (v) {
-              setState(() => _reminder = v);
-              ref.read(settingsServiceProvider).setReminderEnabled(v);
-            },
+          const SizedBox(height: 14),
+          _Group(
+            children: [
+              _Row(
+                icon: Icons.privacy_tip_outlined,
+                title: 'Privacy Policy',
+                trailing: const Icon(Icons.open_in_new,
+                    size: 17, color: Ob.muted),
+                onTap: () =>
+                    openLegalUrl(context, 'Privacy Policy', Config.privacyUrl),
+              ),
+              _Row(
+                icon: Icons.description_outlined,
+                title: 'Terms of Use',
+                trailing: const Icon(Icons.open_in_new,
+                    size: 17, color: Ob.muted),
+                onTap: () =>
+                    openLegalUrl(context, 'Terms of Use', Config.termsUrl),
+              ),
+            ],
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined),
-            title: const Text('Privacy Policy'),
-            trailing: const Icon(Icons.open_in_new, size: 18),
-            onTap: () => _showLink(context, 'Privacy Policy', Config.privacyUrl),
+          const SizedBox(height: 14),
+          _Group(
+            children: [
+              _Row(
+                icon: Icons.delete_outline,
+                tint: t.colorScheme.error,
+                title: 'Clear all dreams',
+                subtitle: 'Permanently deletes every entry on this device',
+                onTap: () => _clearAll(context),
+              ),
+            ],
           ),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: const Text('Terms of Use'),
-            trailing: const Icon(Icons.open_in_new, size: 18),
-            onTap: () => _showLink(context, 'Terms of Use', Config.termsUrl),
-          ),
-          const Divider(),
-          ListTile(
-            leading: Icon(Icons.delete_outline, color: t.colorScheme.error),
-            title: Text('Clear all dreams',
-                style: TextStyle(color: t.colorScheme.error)),
-            onTap: () => _clearAll(context),
-          ),
-          const SizedBox(height: 24),
-          Center(
-            child: Text(
-              '${Config.appName} · reflective dream journal\nnot medical or psychological advice',
-              textAlign: TextAlign.center,
-              style: t.textTheme.labelSmall
-                  ?.copyWith(color: t.colorScheme.onSurfaceVariant),
-            ),
+          const SizedBox(height: 28),
+          const Text(
+            'Oneira · reflective dream journal\n'
+            'not medical or psychological advice',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, height: 1.5, color: Ob.muted),
           ),
           const SizedBox(height: 8),
-          Center(
-            child: Text('id ${deviceId.substring(0, 8)}',
-                style: t.textTheme.labelSmall
-                    ?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+          Text(
+            'id ${deviceId.substring(0, 8)}',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              letterSpacing: 0.8,
+              color: Ob.muted.withValues(alpha: 0.6),
+            ),
           ),
-          const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  void _showLink(BuildContext context, String title, String url) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        content: SelectableText(url),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('Close')),
-        ],
-      ),
-    );
+  Future<void> _setReminder(bool enable) async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _reminder = enable);
+    if (enable) {
+      final ok =
+          await ref.read(notificationServiceProvider).enableDaily();
+      if (!mounted) return;
+      if (!ok) {
+        // Permission denied: the switch must not lie about a reminder that
+        // will never fire.
+        setState(() => _reminder = false);
+        messenger.showSnackBar(SnackBar(
+          content:
+              const Text('Notifications are turned off for Oneira.'),
+          action: SnackBarAction(
+            label: 'Open settings',
+            onPressed: () => openAppSettings(),
+          ),
+        ));
+        return;
+      }
+      messenger.showSnackBar(const SnackBar(
+          content: Text('Reminder set for 7:00 each morning')));
+    } else {
+      await ref.read(notificationServiceProvider).disable();
+    }
+    await ref.read(settingsServiceProvider).setReminderEnabled(enable && _reminder);
   }
 
   Future<void> _clearAll(BuildContext context) async {
@@ -112,7 +156,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Clear all dreams?'),
-        content: const Text('This permanently deletes every saved dream on this device.'),
+        content: const Text(
+            'This permanently deletes every saved dream on this device.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -130,5 +175,93 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             .showSnackBar(const SnackBar(content: Text('All dreams cleared')));
       }
     }
+  }
+}
+
+/// Rounded group — the card equivalent of a Material list section.
+class _Group extends StatelessWidget {
+  final List<Widget> children;
+  const _Group({required this.children});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.045),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        ),
+        child: Column(children: children),
+      );
+}
+
+class _Row extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final Color? tint;
+
+  const _Row({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+    this.tint,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = tint ?? Theme.of(context).colorScheme.primary;
+    return Semantics(
+      button: onTap != null,
+      label: subtitle == null ? title : '$title. $subtitle',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, size: 18, color: accent),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: tint ?? Ob.parchment,
+                        )),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 3),
+                      Text(subtitle!,
+                          style: const TextStyle(
+                              fontSize: 12.5, height: 1.4, color: Ob.muted)),
+                    ],
+                  ],
+                ),
+              ),
+              if (trailing != null) ...[
+                const SizedBox(width: 10),
+                trailing!,
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

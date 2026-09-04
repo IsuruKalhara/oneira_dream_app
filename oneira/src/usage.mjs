@@ -99,7 +99,11 @@ export async function peek(store, { identity, endpoint, tier }) {
 // by app_user_id == identity, map an active entitlement → 'paid'.
 // For local testing only, an `X-Tier: paid` header is honored.
 export async function resolveTier(identity, headers = {}) {
-  const claimed = headers['x-tier'];
-  if (claimed === 'paid' || claimed === 'free') return claimed; // DEV ONLY
+  // Client-declared entitlements are a local-testing convenience ONLY. Gated
+  // so that deploying this file as-is can never ship self-granted 'paid'.
+  if (process.env.NODE_ENV !== 'production') {
+    const claimed = headers['x-tier'];
+    if (claimed === 'paid' || claimed === 'free') return claimed; // DEV ONLY
+  }
   return 'free';
 }

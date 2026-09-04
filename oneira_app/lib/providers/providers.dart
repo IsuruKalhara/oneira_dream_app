@@ -5,6 +5,7 @@ import '../data/db/database.dart';
 import '../data/repositories/dream_repository.dart';
 import '../data/api/dream_api.dart';
 import '../services/stt_service.dart';
+import '../services/notification_service.dart';
 import '../services/settings_service.dart';
 import '../services/purchase_service.dart';
 
@@ -36,6 +37,9 @@ final settingsServiceProvider = Provider<SettingsService>(
 
 final purchaseServiceProvider =
     Provider<PurchaseService>((ref) => PurchaseService());
+
+final notificationServiceProvider =
+    Provider<NotificationService>((ref) => NotificationService());
 
 /// Live stream of saved dreams (local DB).
 final dreamsStreamProvider = StreamProvider((ref) =>
