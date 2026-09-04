@@ -1,21 +1,21 @@
-# Terms of Use — Oneira
+# Terms of Use — Dreamlore
 
 **DRAFT TEMPLATE — not legal advice. Have a lawyer review before publishing.**
 Replace every `[BRACKET]`. Last updated: `[DATE]`.
 
 ## 1. Acceptance
-By using Oneira (the "App"), operated by `[COMPANY]`, you agree to these Terms. If
+By using Dreamlore (the "App"), operated by `[COMPANY]`, you agree to these Terms. If
 you do not agree, do not use the App.
 
-## 2. What Oneira is — and is not
-Oneira transcribes a dream you describe and generates a **reflective, AI-produced
+## 2. What Dreamlore is — and is not
+Dreamlore transcribes a dream you describe and generates a **reflective, AI-produced
 interpretation** drawing on public-domain dream literature. It is for **journaling,
 reflection, and entertainment only**.
 
-**Oneira is NOT** medical, psychological, psychiatric, diagnostic, therapeutic, or
+**Dreamlore is NOT** medical, psychological, psychiatric, diagnostic, therapeutic, or
 predictive advice, and is **not a substitute for professional care**. Interpretations
 are AI-generated, may be inaccurate, and should not be relied upon to make decisions.
-**Oneira is not for use in a crisis or emergency** — if you are struggling, contact a
+**Dreamlore is not for use in a crisis or emergency** — if you are struggling, contact a
 qualified professional or a crisis line (e.g. 988 in the US, Samaritans 116 123 in the
 UK/Ireland, or findahelpline.com).
 

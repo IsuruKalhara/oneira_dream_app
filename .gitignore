@@ -11,17 +11,20 @@ Thumbs.db
 *.key
 **/service-account*.json
 
-# ── Node (oneira backend + worker) ──
+# ── Node (dreamlore backend + worker) ──
 **/node_modules/
 **/.wrangler/
 
 # ── Generated / large data (regenerate: npm run download && npm run ingest) ──
-oneira/data/raw/
-oneira/data/index.json
-oneira/data/vectorize.ndjson
+dreamlore/data/raw/
+dreamlore/data/index.json
+dreamlore/data/vectorize.ndjson
 
-# ── Flutter build artifacts (oneira_app/.gitignore has the full list) ──
+# ── Flutter build artifacts (dreamlore_app/.gitignore has the full list) ──
 **/.dart_tool/
 **/build/
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
+
+# ── Separate project, its own git repo — never commit into this one ──
+timbre_voice_journal/

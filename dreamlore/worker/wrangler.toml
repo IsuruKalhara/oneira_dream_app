@@ -1,0 +1,31 @@
+name = "dreamlore-proxy"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# Non-secret config (safe to commit).
+[vars]
+# Interpretation provider. "openai" (default) keeps this app on the same key and
+# the same model as the voice-journal proxy; "claude" swaps in Anthropic and
+# needs ANTHROPIC_API_KEY instead.
+LLM_PROVIDER = "openai"
+OPENAI_MODEL = "gpt-4o-mini"       # ~$0.001 per interpretation
+TOP_K = "6"
+
+# Only read when LLM_PROVIDER = "claude".
+CLAUDE_MODEL = "claude-sonnet-5"
+CLAUDE_EFFORT = "medium"
+
+# Quota counters. Create with: npx wrangler kv namespace create RATE_LIMIT
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "9cb1b7f59ae849bab6f051e6d54e8d5c"
+
+# Retrieval is in-bundle: src/kb.json is built by `npm run build:kb` from
+# data/index.json and imported directly by the Worker. No Vectorize index and no
+# embedding provider are needed, so neither is configured here. Rebuild kb.json
+# and redeploy whenever the knowledge base changes.
+
+# Secrets (NOT here — set with `wrangler secret put`):
+#   OPENAI_API_KEY        (required while LLM_PROVIDER = "openai")
+#   ANTHROPIC_API_KEY     (required only if you switch LLM_PROVIDER to "claude")
+#   REVENUECAT_API_KEY    (optional; without it every user is 'free')

@@ -1,17 +1,17 @@
-# Store listing & review notes — Oneira
+# Store listing & review notes — Dreamlore
 
 Positioning copy + the App Store / Play rules that matter for this app. The core
 rule: **frame everything as reflection/journaling, never as medical, psychological,
 or predictive.** Health-claim language triggers rejection and liability.
 
 ## Name / subtitle
-- Name: **Oneira** (or `[your chosen name]`)
+- Name: **Dreamlore** (or `[your chosen name]`)
 - Subtitle: *Dream journal & reflections* — avoid "analysis", "therapy", "meaning decoder".
 
 ## Description (draft)
 > Wake, speak your dream, and get a thoughtful reflection grounded in classic
 > public-domain dream literature — with real quotes. Your journal stays private on
-> your device. Oneira is a space for reflection and curiosity, not medical or
+> your device. Dreamlore is a space for reflection and curiosity, not medical or
 > psychological advice.
 >
 > • Speak or type your dream — transcribed on your device
@@ -19,7 +19,7 @@ or predictive.** Health-claim language triggers rejection and liability.
 > • A private, searchable dream journal
 > • See the symbols that recur over time
 >
-> Oneira is for reflection and entertainment. It is not medical, psychological, or
+> Dreamlore is for reflection and entertainment. It is not medical, psychological, or
 > predictive advice, and not a substitute for professional care.
 
 ## Words to USE
@@ -46,7 +46,7 @@ Mirror the above: no account, transient text sent for processing, purchases hand
 Play/RevenueCat.
 
 ## App review notes (paste into the review-notes field)
-> Oneira transcribes a spoken dream on-device and returns an AI-generated reflective
+> Dreamlore transcribes a spoken dream on-device and returns an AI-generated reflective
 > interpretation grounded in public-domain texts. It is explicitly framed as reflection/
 > entertainment, not medical or psychological advice (see onboarding + in-app footer).
 > A safety check detects expressed self-harm intent and shows crisis resources instead

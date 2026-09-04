@@ -1,9 +1,9 @@
-# Privacy Policy — Oneira
+# Privacy Policy — Dreamlore
 
 **DRAFT TEMPLATE — not legal advice. Have a lawyer review before publishing.**
 Replace every `[BRACKET]`. Last updated: `[DATE]`.
 
-Oneira ("we", "us") is operated by `[COMPANY / SOLE TRADER NAME]`, `[ADDRESS]`,
+Dreamlore ("we", "us") is operated by `[COMPANY / SOLE TRADER NAME]`, `[ADDRESS]`,
 contact `[PRIVACY EMAIL]`. This policy explains what we do with your information.
 
 ## The short version
@@ -47,7 +47,7 @@ counters (auto-expiring). Dream text is not persisted by us after a reading is r
   access/delete/etc.; contact `[PRIVACY EMAIL]`. `[Confirm obligations with counsel.]`
 
 ## Children
-Oneira is not directed to children under `[13 / 16]` and we do not knowingly collect
+Dreamlore is not directed to children under `[13 / 16]` and we do not knowingly collect
 their data.
 
 ## Security

@@ -1,11 +1,11 @@
-# Oneira — Ship checklist
+# Dreamlore — Ship checklist
 
 What's built vs. what only you can do. Work top-to-bottom.
 
 ```
 Bitfuzed/
-  oneira/        backend — KB, /explain RAG, metering, Node dev server, Cloudflare Worker
-  oneira_app/    Flutter app — record → transcribe → explain → journal / insights / paywall
+  dreamlore/        backend — KB, /explain RAG, metering, Node dev server, Cloudflare Worker
+  dreamlore_app/    Flutter app — record → transcribe → explain → journal / insights / paywall
   docs/          PRIVACY.md · TERMS.md · STORE-LISTING.md  (drafts to review)
 ```
 
@@ -21,25 +21,25 @@ Bitfuzed/
 
 ### 1. Turn on the real AI (minutes)
 - [ ] Get an Anthropic API key; choose an embedding provider (Voyage or OpenAI).
-- [ ] `cd oneira && EMBEDDINGS_PROVIDER=openai OPENAI_API_KEY=… npm run ingest` (semantic KB — fixes snake→"Reptile").
+- [ ] `cd dreamlore && EMBEDDINGS_PROVIDER=openai OPENAI_API_KEY=… npm run ingest` (semantic KB — fixes snake→"Reptile").
 - [ ] `LLM_PROVIDER=claude ANTHROPIC_API_KEY=… npm run serve` and eyeball a few real interpretations.
 
 ### 2. Deploy the backend (Cloudflare account)
-- [ ] Create KV (`RATE_LIMIT`) + Vectorize index (`oneira-kb`, dims matching your model).
+- [ ] Create KV (`RATE_LIMIT`) + Vectorize index (`dreamlore-kb`, dims matching your model).
 - [ ] `npm run push` → `wrangler vectorize insert …`
 - [ ] `wrangler secret put` ANTHROPIC_API_KEY, OPENAI/VOYAGE key, (optional) REVENUECAT_API_KEY.
-- [ ] `wrangler dev` to verify, then `wrangler deploy`. See `oneira/worker/README.md`.
+- [ ] `wrangler dev` to verify, then `wrangler deploy`. See `dreamlore/worker/README.md`.
 - [ ] **Set an Anthropic Console spend limit + billing alert.** (Runaway-bill backstop.)
 
 ### 3. Subscriptions (Apple + Google + RevenueCat accounts)
 - [ ] Create auto-renewing subscription products ($1–2/mo) in App Store Connect + Google Play.
 - [ ] Configure RevenueCat; entitlement id **`paid`** (matches app + worker).
-- [ ] Set `--dart-define=REVENUECAT_KEY=…` and point the app at the deployed worker via `ONEIRA_API_BASE`.
+- [ ] Set `--dart-define=REVENUECAT_KEY=…` and point the app at the deployed worker via `DREAMLORE_API_BASE`.
 - [ ] Test purchase → confirm the worker returns tier `paid` and quotas rise.
 
 ### 4. Legal & trust (lawyer)
 - [ ] Review `docs/PRIVACY.md` + `docs/TERMS.md`; fill placeholders; host them.
-- [ ] Set `Config.privacyUrl` / `Config.termsUrl` in `oneira_app/lib/core/config.dart`.
+- [ ] Set `Config.privacyUrl` / `Config.termsUrl` in `dreamlore_app/lib/core/config.dart`.
 
 ### 5. Store submission
 - [ ] App icon + screenshots (list in `docs/STORE-LISTING.md`).
@@ -55,7 +55,7 @@ Bitfuzed/
 ## Run locally right now
 ```bash
 # backend
-cd oneira && npm run download && npm run ingest && npm run serve
+cd dreamlore && npm run download && npm run ingest && npm run serve
 # app (Android emulator: use 10.0.2.2; iOS sim: localhost)
-cd oneira_app && flutter run --dart-define=ONEIRA_API_BASE=http://localhost:8787
+cd dreamlore_app && flutter run --dart-define=DREAMLORE_API_BASE=http://localhost:8787
 ```
