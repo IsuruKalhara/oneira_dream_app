@@ -4,6 +4,8 @@ import '../record/record_screen.dart';
 import '../journal/journal_screen.dart';
 import '../insights/insights_screen.dart';
 import '../settings/settings_screen.dart';
+import '../../ui/night.dart';
+import 'dreamlore_nav_bar.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -21,19 +23,44 @@ class _MainShellState extends State<MainShell> {
     SettingsScreen(),
   ];
 
+  static const _items = [
+    NavItem(icon: Icons.mic_none, activeIcon: Icons.mic, label: 'Record'),
+    NavItem(
+        icon: Icons.book_outlined, activeIcon: Icons.book, label: 'Journal'),
+    NavItem(
+        icon: Icons.insights_outlined,
+        activeIcon: Icons.insights,
+        label: 'Insights'),
+    NavItem(
+        icon: Icons.settings_outlined,
+        activeIcon: Icons.settings,
+        label: 'Settings'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _index, children: _pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.mic_none), selectedIcon: Icon(Icons.mic), label: 'Record'),
-          NavigationDestination(icon: Icon(Icons.book_outlined), selectedIcon: Icon(Icons.book), label: 'Journal'),
-          NavigationDestination(icon: Icon(Icons.insights_outlined), selectedIcon: Icon(Icons.insights), label: 'Insights'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
-        ],
+      backgroundColor: Ob.ink,
+      // The bar floats, so content runs underneath it and blurs through.
+      extendBody: true,
+      // One ambient canvas for the whole shell — the pages are transparent, so
+      // four starfields aren't ticking four controllers for one visible result.
+      body: NightCanvas(
+        child: IndexedStack(
+          index: _index,
+          children: [
+            // IndexedStack keeps hidden children alive but does not mute their
+            // tickers — without TickerMode the mic orb keeps animating while
+            // the user sits on other tabs, burning CPU for invisible frames.
+            for (var i = 0; i < _pages.length; i++)
+              TickerMode(enabled: i == _index, child: _pages[i]),
+          ],
+        ),
+      ),
+      bottomNavigationBar: DreamloreNavBar(
+        index: _index,
+        items: _items,
+        onSelect: (i) => setState(() => _index = i),
       ),
     );
   }

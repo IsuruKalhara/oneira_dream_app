@@ -14,5 +14,25 @@ void main() {
       expect(SafetyCheck.isConcerning('a snake chased me through a dark forest'), isFalse);
       expect(SafetyCheck.isConcerning('my teeth fell out one by one'), isFalse);
     });
+
+    test('does NOT flag being attacked in a dream — the most common nightmare',
+        () {
+      // These used to match the old `(kill|hurt|harm) ... me` pattern and
+      // answered an ordinary nightmare with a suicide-hotline card.
+      expect(
+          SafetyCheck.isConcerning('a man was chasing me and trying to kill me'),
+          isFalse);
+      expect(SafetyCheck.isConcerning('the shadow was killing me'), isFalse);
+      expect(SafetyCheck.isConcerning('it kept hurting me in the dream'),
+          isFalse);
+    });
+
+    test('flags the broader ideation phrasings the old list missed', () {
+      expect(SafetyCheck.isConcerning('I want to end my life'), isTrue);
+      expect(SafetyCheck.isConcerning('honestly I wanna die'), isTrue);
+      expect(SafetyCheck.isConcerning('there is no point in living'), isTrue);
+      expect(
+          SafetyCheck.isConcerning('everyone is better off without me'), isTrue);
+    });
   });
 }

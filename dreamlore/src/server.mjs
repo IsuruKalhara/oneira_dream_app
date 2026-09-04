@@ -31,11 +31,19 @@ function json(res, code, obj) {
 function readJson(req) {
   return new Promise((resolve, reject) => {
     let d = '';
+    let overflowed = false;
     req.on('data', (c) => {
+      if (overflowed) return;
       d += c;
-      if (d.length > 1e6) req.destroy();
+      if (d.length > 1e6) {
+        // Answer with a 413 and settle the promise — destroy() reset the
+        // socket with no response and could leave the handler await hanging.
+        overflowed = true;
+        reject(Object.assign(new Error('body too large'), { statusCode: 413 }));
+      }
     });
     req.on('end', () => {
+      if (overflowed) return;
       try {
         resolve(d ? JSON.parse(d) : {});
       } catch {
@@ -144,14 +152,17 @@ const server = http.createServer(async (req, res) => {
 
       return json(res, 200, { ...out, quota: { tier: quota.tier, day: quota.day, month: quota.month } });
     } catch (e) {
-      return json(res, 500, { error: String(e?.message || e) });
+      return json(res, e?.statusCode || 500, { error: String(e?.message || e) });
     }
   }
 
   json(res, 404, { error: 'not found' });
 });
 
-server.listen(config.port, () => {
+// Loopback by default: this dev server honors a client-declared X-Tier header
+// and must never be reachable from off-machine by accident. HOST=0.0.0.0 to
+// expose it deliberately (e.g. for a phone on the same network).
+server.listen(config.port, process.env.HOST || '127.0.0.1', () => {
   console.log(
     `dreamlore → http://localhost:${config.port}  (llm=${config.llmProvider}, embeddings=${config.embeddingsProvider})`,
   );

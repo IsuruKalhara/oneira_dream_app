@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../services/billing_api.dart';
 import '../services/image_store.dart';
 import '../services/stt_service.dart';
+import '../services/notification_service.dart';
 import '../services/settings_service.dart';
 import '../services/subscription_service.dart';
 
@@ -123,6 +124,9 @@ class EntitlementController extends Notifier<bool> {
 
 final entitlementProvider =
     NotifierProvider<EntitlementController, bool>(EntitlementController.new);
+
+final notificationServiceProvider =
+    Provider<NotificationService>((ref) => NotificationService());
 
 /// Live stream of saved dreams (local DB).
 final dreamsStreamProvider = StreamProvider((ref) =>

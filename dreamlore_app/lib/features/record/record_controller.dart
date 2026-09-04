@@ -12,6 +12,10 @@ import '../../providers/providers.dart';
 
 enum RecordStatus { idle, listening, ready, interpreting, done, safety, error }
 
+/// Which step failed, so the screen can point the retry at the right thing —
+/// a mic permission problem and a failed interpretation need different words.
+enum RecordErrorSource { mic, interpretation }
+
 class RecordState {
   final RecordStatus status;
   final String transcript;
@@ -19,6 +23,7 @@ class RecordState {
   final QuotaInfo? quota;
   final QuotaExceededException? quotaError;
   final String? error;
+  final RecordErrorSource? errorSource;
   final String? savedId;
 
   /// The dream's picture, generated after the reading. Kept in memory until
@@ -38,6 +43,7 @@ class RecordState {
     this.quota,
     this.quotaError,
     this.error,
+    this.errorSource,
     this.savedId,
     this.imageBytes,
     this.imageStatus = DreamImageStatus.idle,
@@ -52,7 +58,8 @@ class RecordState {
     QuotaInfo? quota,
     String? savedId,
     QuotaExceededException? quotaError, // transient: cleared unless passed
-    String? error, // transient: cleared unless passed
+    String? error, // transient
+    RecordErrorSource? errorSource, // transient: cleared unless passed
     Uint8List? imageBytes,
     DreamImageStatus? imageStatus,
     String? imageError, // transient
@@ -66,6 +73,7 @@ class RecordState {
         savedId: savedId ?? this.savedId,
         quotaError: quotaError,
         error: error,
+        errorSource: errorSource,
         imageBytes: imageBytes ?? this.imageBytes,
         imageStatus: imageStatus ?? this.imageStatus,
         imageError: imageError,
@@ -90,6 +98,7 @@ class RecordController extends Notifier<RecordState> {
         status: RecordStatus.error,
         error: 'Microphone or speech recognition is unavailable. '
             'Check the app permissions and try again.',
+        errorSource: RecordErrorSource.mic,
       );
       return;
     }
@@ -136,7 +145,11 @@ class RecordController extends Notifier<RecordState> {
     } on QuotaExceededException catch (e) {
       state = state.copyWith(status: RecordStatus.error, quotaError: e);
     } catch (e) {
-      state = state.copyWith(status: RecordStatus.error, error: e.toString());
+      state = state.copyWith(
+        status: RecordStatus.error,
+        error: e.toString(),
+        errorSource: RecordErrorSource.interpretation,
+      );
     }
   }
 
