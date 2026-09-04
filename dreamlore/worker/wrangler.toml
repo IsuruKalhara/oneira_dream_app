@@ -31,7 +31,17 @@ id = "9cb1b7f59ae849bab6f051e6d54e8d5c"
 # embedding provider are needed, so neither is configured here. Rebuild kb.json
 # and redeploy whenever the knowledge base changes.
 
+# Subscriptions — Google Play Billing, verified against the Play Developer API.
+# The product ids must match Config in the Flutter app and the subscriptions in
+# Play Console. Both grant the same 'paid' tier; only the period and the yearly
+# plan's free trial differ.
+ANDROID_PACKAGE_NAME = "com.bitfuzed.dreamlore"
+PLAY_MONTHLY_PRODUCT_ID = "dreamlore_plus_monthly"
+PLAY_YEARLY_PRODUCT_ID = "dreamlore_plus_yearly"
+
 # Secrets (NOT here — set with `wrangler secret put`):
-#   OPENAI_API_KEY        (required while LLM_PROVIDER = "openai")
-#   ANTHROPIC_API_KEY     (required only if you switch LLM_PROVIDER to "claude")
-#   REVENUECAT_API_KEY    (optional; without it every user is 'free')
+#   OPENAI_API_KEY              (required while LLM_PROVIDER = "openai")
+#   ANTHROPIC_API_KEY           (required only if you switch LLM_PROVIDER to "claude")
+#   PLAY_SERVICE_ACCOUNT_JSON   (the whole service-account key JSON, one line;
+#                                without it /billing/verify grants nothing and
+#                                every user stays 'free')

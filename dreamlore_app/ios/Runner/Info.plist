@@ -70,5 +70,20 @@
 	<string>Dreamlore uses the microphone to transcribe the dream you speak aloud. Audio is processed on your device and is not stored or uploaded.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Dreamlore transcribes your spoken dream on your device so you can log and reflect on it.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<!-- Google Sign-In returns to the app through this scheme. It is the
+			     REVERSED_CLIENT_ID from GoogleService-Info.plist; without it the
+			     browser completes the sign-in and never hands control back, which
+			     looks like a silent hang rather than an error. -->
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.387756452759-shddn70qu8b9nio6sa9qb6j3ppekra0i</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

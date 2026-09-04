@@ -1,7 +1,7 @@
 // Dreamlore — production /explain proxy (Cloudflare Worker).
 //
 // Holds the provider key, enforces per-user quotas (KV), verifies subscription
-// tier (RevenueCat), retrieves from the KB, and calls Claude. Same request/
+// tier against Google Play, retrieves from the KB, and calls Claude. Same request/
 // response contract as the Node dev server (src/server.mjs) so the Flutter app
 // talks to either unchanged.
 //
@@ -15,6 +15,8 @@
 // `wrangler dev` — see worker/README.md.
 import { SYSTEM_PROMPT, EXPLAIN_SCHEMA, buildUserContent } from '../../src/prompt.mjs';
 import { makeRetriever } from '../../src/retrieve.mjs';
+import { getSubscription, isPlayConfigured, PlayApiError } from './play.js';
+import { entitlementFrom, isExpired, productIdsFromEnv } from './entitlements.js';
 import KB from './kb.json';
 
 // Built once per isolate: caches the tokenized headwords the ranking needs.
@@ -80,6 +82,20 @@ export default {
 
     if (url.pathname === '/usage' && request.method === 'GET') {
       return json(await peek(env, deviceToken, tier));
+    }
+
+    if (url.pathname === '/billing/verify' && request.method === 'POST') {
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ error: 'invalid JSON body' }, 400);
+      }
+      return json(await verifyPurchase(env, deviceToken, body));
+    }
+
+    if (url.pathname === '/billing/state' && request.method === 'POST') {
+      return json(await billingState(env, deviceToken));
     }
 
     if (url.pathname === '/explain' && request.method === 'POST') {
@@ -323,20 +339,131 @@ async function peek(env, id, tier) {
   };
 }
 
-// ---- subscription tier (RevenueCat) ----
-async function resolveTier(id, env) {
-  if (!env.REVENUECAT_API_KEY) return 'free';
+// ---- subscription tier (Google Play) ----
+//
+// Entitlements are decided here, from Play's own answer, and cached in KV. The
+// app keeps its own copy so it can render a plan while offline, but that copy
+// never decides quota: this does.
+
+const entKey = (id) => `ent:${id}`;
+const tokKey = (token) => `tok:${token}`;
+
+/** Reads the cached entitlement for a device, or null. */
+async function readEntitlement(env, id) {
   try {
-    const r = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(id)}`, {
-      headers: { authorization: `Bearer ${env.REVENUECAT_API_KEY}` },
-    });
-    if (r.ok) {
-      const j = await r.json();
-      const ent = j.subscriber?.entitlements?.paid;
-      if (ent && (!ent.expires_date || new Date(ent.expires_date) > new Date())) return 'paid';
+    const raw = await env.RATE_LIMIT.get(entKey(id));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Caches an entitlement, expiring the KV entry a day after the subscription
+ * itself lapses so a stale grant cannot outlive what was paid for.
+ */
+async function writeEntitlement(env, id, entitlement) {
+  const ttl = Math.max(
+    60,
+    Math.ceil((entitlement.expiryMs - Date.now()) / 1000) + 86400,
+  );
+  await env.RATE_LIMIT.put(entKey(id), JSON.stringify(entitlement), {
+    expirationTtl: ttl,
+  });
+}
+
+async function clearEntitlement(env, id) {
+  await env.RATE_LIMIT.delete(entKey(id));
+}
+
+/** The tier this device is entitled to right now, for quota purposes. */
+async function resolveTier(id, env) {
+  const cached = await readEntitlement(env, id);
+  return isExpired(cached) ? 'free' : 'paid';
+}
+
+/**
+ * Verifies a Play purchase token and caches what it grants.
+ *
+ * The purchase token is bound to the first device token that presented it, so
+ * one subscription cannot be pasted into a dozen installs to multiply the
+ * quota. The subscription is still valid — it is simply already spoken for.
+ */
+async function verifyPurchase(env, deviceToken, body) {
+  const productId = String(body?.productId || '');
+  const purchaseToken = String(body?.purchaseToken || '');
+  if (!productId || !purchaseToken) {
+    return { tier: 'free', expiryMs: 0, error: 'missing productId/purchaseToken' };
+  }
+  return verifyToken(env, deviceToken, purchaseToken);
+}
+
+/**
+ * The verification itself. Play's subscriptionsv2 resource is keyed by the
+ * purchase token alone and carries its own product ids, so this needs nothing
+ * else — which is what lets a refresh re-run it with only a stored token.
+ */
+async function verifyToken(env, deviceToken, purchaseToken) {
+  const productIds = productIdsFromEnv(env);
+  if (!isPlayConfigured(env)) {
+    // Nothing to verify against yet. Say so rather than granting: an
+    // unverifiable purchase is honoured by the *app* for a day, which is the
+    // right place for that leniency, not here where the budget is spent.
+    return { tier: 'free', expiryMs: 0, reason: 'play_not_configured' };
+  }
+
+  // Bind the token to a device on first sight.
+  const ownerKey = tokKey(purchaseToken);
+  const owner = await env.RATE_LIMIT.get(ownerKey);
+  if (owner && owner !== deviceToken) {
+    return { tier: 'free', expiryMs: 0, reason: 'token_bound_to_other_device' };
+  }
+
+  let subscription;
+  try {
+    subscription = await getSubscription(env, purchaseToken);
+  } catch (e) {
+    const status = e instanceof PlayApiError ? e.status : 0;
+    // 4xx from Play is a real answer: the token is bad or already gone.
+    // Anything else is our problem, and must not read as "not subscribed".
+    if (status >= 400 && status < 500) {
+      await clearEntitlement(env, deviceToken);
+      return { tier: 'free', expiryMs: 0, reason: 'rejected_by_play' };
     }
-  } catch (_) {}
-  return 'free';
+    return { tier: 'free', expiryMs: 0, error: 'verification_unavailable' };
+  }
+
+  const entitlement = entitlementFrom(subscription, { productIds });
+  if (entitlement.tier === 'paid') {
+    const record = { ...entitlement, purchaseToken };
+    await writeEntitlement(env, deviceToken, record);
+    if (!owner) {
+      await env.RATE_LIMIT.put(ownerKey, deviceToken, {
+        expirationTtl: 60 * 60 * 24 * 400,
+      });
+    }
+  } else {
+    await clearEntitlement(env, deviceToken);
+  }
+  return {
+    tier: entitlement.tier,
+    expiryMs: entitlement.expiryMs,
+    state: entitlement.state,
+  };
+}
+
+/**
+ * Re-reads this device's entitlement. When a purchase token is on file the
+ * answer is refreshed from Play, so a cancellation or refund is noticed even
+ * though the app has no new token to offer.
+ */
+async function billingState(env, deviceToken) {
+  const cached = await readEntitlement(env, deviceToken);
+  if (cached?.purchaseToken && isPlayConfigured(env)) {
+    return verifyToken(env, deviceToken, cached.purchaseToken);
+  }
+  if (isExpired(cached)) return { tier: 'free', expiryMs: 0 };
+  return { tier: cached.tier, expiryMs: cached.expiryMs, state: cached.state || '' };
 }
 
 // ---- helpers ----

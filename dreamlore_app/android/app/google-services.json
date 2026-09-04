@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "387756452759",
+    "project_id": "dreamlore-app-51321",
+    "storage_bucket": "dreamlore-app-51321.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:387756452759:android:78af91a27475e7b4e6b2d2",
+        "android_client_info": {
+          "package_name": "com.bitfuzed.dreamlore"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "387756452759-rou4fdrhq11tqkcgrgabidsn2i96agfu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bitfuzed.dreamlore",
+            "certificate_hash": "88c605993f6ac8dee1302733c264284abf0798e5"
+          }
+        },
+        {
+          "client_id": "387756452759-lc78sd2f3ue7vans9p4amd4ja3khp56n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1IkfVyPkQ2oxXVRZLFjBUe8TG6Ndado8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "387756452759-lc78sd2f3ue7vans9p4amd4ja3khp56n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "387756452759-shddn70qu8b9nio6sa9qb6j3ppekra0i.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.bitfuzed.dreamlore"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

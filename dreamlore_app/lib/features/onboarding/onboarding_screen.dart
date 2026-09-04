@@ -3,87 +3,255 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config.dart';
 import '../../providers/providers.dart';
-import '../shell/main_shell.dart';
 
-class OnboardingScreen extends ConsumerWidget {
+/// A short paged introduction, shown once, straight after sign-in. It ends by
+/// asking for the microphone — at the moment the user has just been told what
+/// it's for, rather than as an unexplained system prompt on launch.
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final t = Theme.of(context);
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
+}
 
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 24),
-              Icon(Icons.nightlight_round, size: 44, color: t.colorScheme.primary),
-              const SizedBox(height: 20),
-              Text(Config.appName, style: t.textTheme.displaySmall),
-              const SizedBox(height: 8),
-              Text('Speak your dream when you wake. Get a grounded reading.',
-                  style: t.textTheme.titleMedium
-                      ?.copyWith(color: t.colorScheme.onSurfaceVariant)),
-              const SizedBox(height: 32),
-              _point(t, Icons.mic, 'Tell it your dream',
-                  'Transcribed on your device — the audio never leaves your phone.'),
-              _point(t, Icons.menu_book, 'A reading grounded in real books',
-                  'Drawing on public-domain dream literature, with quotes.'),
-              _point(t, Icons.lock_outline, 'Private by default',
-                  'Your dream journal is stored only on this device.'),
-              const Spacer(),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Text(
-                    'Dreamlore is for reflection and journaling. It is not medical, '
-                    'psychological, or predictive advice, and is not a substitute '
-                    'for professional care.',
-                    style: t.textTheme.bodySmall,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () async {
-                  await ref.read(settingsServiceProvider).setOnboarded(true);
-                  // Prompt for mic/speech permission up front.
-                  await ref.read(sttServiceProvider).init();
-                  if (!context.mounted) return;
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const MainShell()),
-                  );
-                },
-                child: const Text('Get started'),
-              ),
-            ],
-          ),
-        ),
-      ),
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+  final _controller = PageController();
+  int _page = 0;
+  bool _finishing = false;
+
+  static const _pages = [
+    _PageData(
+      icon: Icons.mic_none_rounded,
+      title: 'Tell it your\ndream.',
+      body:
+          'Dreams go the moment you reach for them. Speak while it is still '
+          'there — Dreamlore listens and writes it down for you.',
+    ),
+    _PageData(
+      icon: Icons.menu_book_rounded,
+      title: 'A reading from\nreal books.',
+      body:
+          'Not invented symbolism. Every reading draws on public-domain dream '
+          'literature and quotes it, so you can see where it came from.',
+    ),
+    _PageData(
+      icon: Icons.insights_rounded,
+      title: 'Watch the\npatterns surface.',
+      body:
+          'The same symbols come back. Your journal tracks them over weeks and '
+          'months, so you notice what keeps returning.',
+    ),
+    _PageData(
+      icon: Icons.lock_outline_rounded,
+      title: 'Yours, and\nonly yours.',
+      body:
+          'Your voice is transcribed on this device and never uploaded. Your '
+          'journal is stored here too.',
+      note:
+          'Dreamlore is for reflection and journaling. It is not medical, '
+          'psychological, or predictive advice, and is not a substitute for '
+          'professional care.',
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _finish() async {
+    setState(() => _finishing = true);
+    // Hold the services rather than `ref`: the permission dialog is the most
+    // likely moment in the whole app for someone to walk away, which detaches
+    // the element, and reading `ref` after that throws.
+    final settings = ref.read(settingsServiceProvider);
+    final stt = ref.read(sttServiceProvider);
+    final gate = ref.read(appGateProvider.notifier);
+
+    try {
+      await stt.init();
+    } catch (_) {
+      // Declined, or a detached activity made the channel throw. Onboarding
+      // still finishes: the microphone is re-requested at the point of use,
+      // and a dream can always be typed instead.
+    }
+    // Runs even if the user walked away mid-dialog, so they are not shown
+    // onboarding again on the next launch.
+    await settings.setOnboarded(true);
+    gate.recompute();
+  }
+
+  void _next() {
+    if (_page == _pages.length - 1) {
+      _finish();
+      return;
+    }
+    _controller.nextPage(
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
     );
   }
 
-  Widget _point(ThemeData t, IconData icon, String title, String body) => Padding(
-        padding: const EdgeInsets.only(bottom: 18),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context);
+    final isLast = _page == _pages.length - 1;
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
           children: [
-            Icon(icon, color: t.colorScheme.primary),
-            const SizedBox(width: 14),
+            Align(
+              alignment: Alignment.centerRight,
+              child: AnimatedOpacity(
+                opacity: isLast ? 0 : 1,
+                duration: const Duration(milliseconds: 200),
+                child: TextButton(
+                  onPressed: isLast || _finishing
+                      ? null
+                      : () => _controller.animateToPage(
+                            _pages.length - 1,
+                            duration: const Duration(milliseconds: 380),
+                            curve: Curves.easeOutCubic,
+                          ),
+                  child: const Text('Skip'),
+                ),
+              ),
+            ),
             Expanded(
+              child: PageView.builder(
+                controller: _controller,
+                itemCount: _pages.length,
+                onPageChanged: (i) => setState(() => _page = i),
+                itemBuilder: (_, i) => _Page(data: _pages[i]),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 8, 28, 24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: t.textTheme.titleSmall),
-                  const SizedBox(height: 2),
-                  Text(body, style: t.textTheme.bodySmall),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var i = 0; i < _pages.length; i++)
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          width: i == _page ? 22 : 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: i == _page
+                                ? t.colorScheme.primary
+                                : t.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  if (_finishing)
+                    const SizedBox(
+                      height: 52,
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    )
+                  else
+                    FilledButton(
+                      onPressed: _next,
+                      child: Text(isLast
+                          ? 'Allow microphone & continue'
+                          : 'Continue'),
+                    ),
+                  if (isLast) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'You can say no — dreams can be typed instead.',
+                      style: t.textTheme.labelSmall
+                          ?.copyWith(color: t.colorScheme.onSurfaceVariant),
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
         ),
-      );
+      ),
+    );
+  }
+}
+
+class _PageData {
+  const _PageData({
+    required this.icon,
+    required this.title,
+    required this.body,
+    this.note,
+  });
+  final IconData icon;
+  final String title;
+  final String body;
+  final String? note;
+}
+
+class _Page extends StatelessWidget {
+  const _Page({required this.data});
+  final _PageData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Spacer(flex: 2),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: t.colorScheme.primary.withValues(alpha: 0.16),
+            ),
+            child: Icon(data.icon, size: 34, color: t.colorScheme.primary),
+          ),
+          const SizedBox(height: 28),
+          Text(data.title,
+              style: t.textTheme.displaySmall?.copyWith(height: 1.1)),
+          const SizedBox(height: 14),
+          Text(
+            data.body,
+            style: t.textTheme.titleMedium?.copyWith(
+              color: t.colorScheme.onSurfaceVariant,
+              height: 1.45,
+            ),
+          ),
+          const Spacer(flex: 2),
+          if (data.note != null)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Text(data.note!, style: t.textTheme.bodySmall),
+              ),
+            ),
+          const SizedBox(height: 8),
+          if (data.note == null)
+            Text(
+              Config.appName,
+              style: t.textTheme.labelSmall?.copyWith(
+                color: t.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                letterSpacing: 2,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }

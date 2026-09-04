@@ -1,0 +1,59 @@
+rules_version = '2';
+
+// Dreamlore — Firestore security rules.
+//
+// A dream journal is more sensitive than most synced data, so the rule is
+// simple and total: a signed-in user can reach their own subtree and nothing
+// else. There is no shared collection, no public read, and no admin path
+// reachable from a client.
+//
+// Deploy with: firebase deploy --only firestore:rules --project dreamlore-app-51321
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid} {
+      // The profile document itself (settings, sync metadata).
+      allow read, write: if isOwner(uid);
+
+      // Dreams, and anything filed under a dream.
+      match /dreams/{dreamId} {
+        allow read, delete: if isOwner(uid);
+        // Reject writes that are not shaped like a dream. Without this, a
+        // signed-in user can still write arbitrary documents into their own
+        // subtree — cheap for them, and it is our storage bill.
+        allow create, update: if isOwner(uid) && isValidDream();
+
+        match /{sub=**} {
+          allow read, write: if isOwner(uid);
+        }
+      }
+    }
+
+    // Everything not matched above is denied. Listed explicitly so the intent
+    // survives someone adding a collection later and wondering why it 403s.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+function isOwner(uid) {
+  return request.auth != null && request.auth.uid == uid;
+}
+
+// Size caps are the point: they bound what one account can cost us. The text
+// limit matches MAX_DREAM_CHARS in the Worker, so a dream that syncs is a dream
+// the backend would also have accepted.
+function isValidDream() {
+  let d = request.resource.data;
+  return d.keys().hasOnly([
+           'text', 'createdAt', 'updatedAt', 'title',
+           'interpretation', 'symbols', 'quotes', 'mood', 'tags'
+         ])
+         && d.text is string
+         && d.text.size() <= 4000
+         && d.createdAt is timestamp
+         && (!('title' in d) || (d.title is string && d.title.size() <= 200))
+         && (!('interpretation' in d) || (d.interpretation is string && d.interpretation.size() <= 20000))
+         && (!('tags' in d) || (d.tags is list && d.tags.size() <= 20));
+}

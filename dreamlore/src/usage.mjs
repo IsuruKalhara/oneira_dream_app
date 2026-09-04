@@ -8,7 +8,7 @@
 //
 // The counter store is pluggable: MemoryStore for dev; in production swap in
 // Cloudflare KV (Timbre's pattern) or a Durable Object for atomic counts.
-// The tier resolver is a stub — wire it to RevenueCat server-side (see below).
+// The tier resolver here is a dev stub; the Worker resolves it from Google Play.
 
 // ---- Model pricing (USD per 1M tokens) — keep in sync with the Anthropic docs.
 const PRICES = {
@@ -94,9 +94,10 @@ export async function peek(store, { identity, endpoint, tier }) {
 }
 
 // ---- Tier resolver (STUB). NEVER trust the client to declare its own tier in
-// production. Wire this to RevenueCat server-side, reusing Timbre's pattern
-// (timbre_voice_journal/ai-proxy/src/index.js → resolveTier): GET the subscriber
-// by app_user_id == identity, map an active entitlement → 'paid'.
+// production.
+// In production the Worker resolves this from Google Play (see
+// worker/src/index.js → resolveTier): a purchase token verified against the
+// Play Developer API, cached in KV with its paid-through date.
 // For local testing only, an `X-Tier: paid` header is honored.
 export async function resolveTier(identity, headers = {}) {
   const claimed = headers['x-tier'];

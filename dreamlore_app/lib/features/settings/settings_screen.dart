@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/config.dart';
 import '../../providers/providers.dart';
@@ -23,7 +24,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
-    final tier = ref.watch(quotaProvider).asData?.value?.tier ?? 'free';
+    // The entitlement the store and the verifier agree on. The quota snapshot
+    // is the Worker's own answer, and lags a purchase by a request; this does
+    // not, so the plan row is right the moment a purchase lands.
+    final isPaid = ref.watch(entitlementProvider);
+    final auth = ref.watch(authServiceProvider);
     final deviceId = ref.read(deviceIdProvider);
 
     return Scaffold(
@@ -33,14 +38,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.workspace_premium_outlined),
             title: const Text('Plan'),
-            subtitle: Text(tier == 'paid' ? 'Dreamlore Plus' : 'Free'),
-            trailing: tier == 'paid'
+            subtitle: Text(isPaid ? 'Dreamlore Plus' : 'Free'),
+            trailing: isPaid
                 ? null
                 : TextButton(
                     onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const PaywallScreen())),
                     child: const Text('Upgrade'),
                   ),
+          ),
+          if (isPaid)
+            ListTile(
+              leading: const Icon(Icons.credit_card),
+              title: const Text('Manage subscription'),
+              subtitle: const Text('Change plan or cancel in Google Play'),
+              trailing: const Icon(Icons.open_in_new, size: 18),
+              onTap: _openPlaySubscriptions,
+            )
+          else
+            ListTile(
+              leading: const Icon(Icons.restore),
+              title: const Text('Restore purchases'),
+              subtitle: const Text('Already subscribed on this Google account?'),
+              onTap: _restore,
+            ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.account_circle_outlined),
+            title: const Text('Account'),
+            subtitle: Text(auth.email.isEmpty ? 'Signed in' : auth.email),
+            trailing: TextButton(
+              onPressed: _signOut,
+              child: const Text('Sign out'),
+            ),
           ),
           SwitchListTile(
             secondary: const Icon(Icons.alarm),
@@ -91,6 +121,58 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _openPlaySubscriptions() async {
+    final ok = await launchUrl(
+      Uri.parse(Config.manageSubscriptionsUrl),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Couldn't open Google Play.")),
+      );
+    }
+  }
+
+  Future<void> _restore() async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final result = await ref.read(entitlementProvider.notifier).restore();
+      messenger.showSnackBar(SnackBar(
+        content: Text(result.entitled
+            ? 'Restored — Dreamlore Plus is active.'
+            : 'No previous purchases found for this Google account.'),
+      ));
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text("Couldn't restore purchases.")),
+      );
+    }
+  }
+
+  Future<void> _signOut() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text(
+            'Your dreams stay on this device. Your subscription stays with '
+            'your Google account and can be restored.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Sign out')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await ref.read(signedInProvider.notifier).signOut();
+    if (!mounted) return;
+    ref.read(appGateProvider.notifier).recompute();
   }
 
   void _showLink(BuildContext context, String title, String url) {

@@ -71,6 +71,22 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, await peek(store, { identity, endpoint: 'explain', tier }));
   }
 
+  // Billing, dev flavour. The Worker verifies purchase tokens against the Play
+  // Developer API; there is no Play here, so these mirror the shape of that
+  // answer and report whatever `X-Tier` claims. Dev only — see
+  // worker/src/index.js for the version that decides anything.
+  if (req.method === 'POST' && (url.pathname === '/billing/verify' ||
+      url.pathname === '/billing/state')) {
+    const tier = await resolveTier(identity, req.headers);
+    return json(res, 200, {
+      tier,
+      expiryMs: tier === 'paid'
+        ? Date.now() + 30 * 24 * 60 * 60 * 1000
+        : 0,
+      state: 'dev',
+    });
+  }
+
   if (req.method === 'POST' && url.pathname === '/explain') {
     try {
       const body = await readJson(req);

@@ -8,7 +8,7 @@ Flutter app points at either unchanged.
 | Retrieval | **In-bundle.** `src/kb.json` ships with the Worker; cosine runs in JS. No Vectorize, no embedding API, no subrequest. |
 | Interpretation | **OpenAI `gpt-4o-mini`** by default (~$0.001/dream). Set `LLM_PROVIDER=claude` to switch. |
 | Quotas | KV, per device token: free 1/day · 5/month, paid 3/day · 50/month. |
-| Tier | RevenueCat, entitlement id `paid`. Without `REVENUECAT_API_KEY` everyone is `free`. |
+| Tier | Google Play Billing. `/billing/verify` checks a purchase token against the Play Developer API and caches the answer (with its paid-through date) in KV. Without `PLAY_SERVICE_ACCOUNT_JSON` everyone is `free`. |
 | Safety | Expressed self-harm intent returns crisis resources **before** any model call — no cost, no quota. |
 | Quote integrity | Every quote is checked verbatim against the retrieved passages; anything else is dropped. |
 
@@ -28,7 +28,10 @@ npx wrangler kv namespace create RATE_LIMIT   # paste the id into wrangler.toml
 # 3. Provider key
 cd worker
 npx wrangler secret put OPENAI_API_KEY
-npx wrangler secret put REVENUECAT_API_KEY    # optional
+
+# 3b. Subscriptions: the Play service-account key, as one line of JSON.
+#     Skip it and every user stays 'free' — nothing else breaks.
+npx wrangler secret put PLAY_SERVICE_ACCOUNT_JSON < play-service-account.json
 
 # 4. Ship
 npx wrangler deploy

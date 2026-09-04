@@ -26,3 +26,11 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+analyzer:
+  exclude:
+    # iOS SourcePackages vendors each Firebase pod's own test sources into
+    # build/, and those are written against a different mockito version. They
+    # are not our code and analysing them buried real findings under 650 errors.
+    - build/**
+    - ios/Pods/**
