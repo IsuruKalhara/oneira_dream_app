@@ -135,18 +135,49 @@ def frame(out_name, shot, caption, eyebrow=None, dev_w=700, seed=7):
     print("wrote", out_name)
 
 
+def detail_frame(out_name, shot, caption, eyebrow, crop, seed=7):
+    """A cropped detail rather than a whole phone — used where the full screen
+    carries something that does not belong in a store frame (here, the
+    sideload's "plans unavailable" notice, which no Play build ever shows)."""
+    canvas = night(W, H, seed=seed).convert("RGBA")
+    d = ImageDraw.Draw(canvas)
+    f_cap = font("Newsreader.ttf", 76)
+    f_eye = font("DMSans.ttf", 30)
+
+    y = 150
+    tw = d.textlength(eyebrow, font=f_eye)
+    d.text(((W - tw) / 2, y), eyebrow, font=f_eye, fill=INDIGO)
+    y += 56
+    for ln in wrap(d, caption, f_cap, W - 150):
+        tw = d.textlength(ln, font=f_cap)
+        d.text(((W - tw) / 2, y), ln, font=f_cap, fill=PARCH)
+        y += 92
+
+    im = Image.open(os.path.join(RAW, shot)).convert("RGB").crop(crop)
+    target_w = 880
+    h = int(target_w * im.height / im.width)
+    im = im.resize((target_w, h), Image.LANCZOS)
+    card = rounded(im, 34)
+    shadow_paste(canvas, card, ((W - target_w) // 2, y + 90))
+    canvas.convert("RGB").save(os.path.join(OUT, out_name), quality=95)
+    print("wrote", out_name)
+
+
 FRAMES = [
     ("01_speak.png", "f1_listening.png", "Speak it before it fades", "VOICE, ON WAKING", 690, 3),
     ("02_reading.png", "f2_quotes.png", "A reading that quotes real books", "GROUNDED, NOT GUESSED", 690, 11),
     ("03_painted.png", "f3_picture.png", "See your dream, painted", None, 800, 5),
     ("04_journal.png", "f4_journal.png", "A private dream diary", "STAYS ON YOUR PHONE", 690, 19),
     ("05_patterns.png", "f5_insights.png", "Watch the patterns surface", "NIGHT AFTER NIGHT", 690, 23),
-    ("06_plus.png", "f6_paywall.png", "Plus, from $2.50 a month", "DREAMLORE PLUS", 690, 29),
     ("07_private.png", "f7_privacy.png", "No account. Nothing uploaded.", "PRIVATE BY DEFAULT", 690, 31),
 ]
 
 for args in FRAMES:
     frame(*args)
+
+# The paywall as a detail: just the two plan cards.
+detail_frame("06_plus.png", "f6_paywall.png", "Plus, from $2.50 a month",
+             "DREAMLORE PLUS", (52, 300, 1028, 1620), seed=29)
 
 
 # ── Feature graphic: 1024×500, the one banner Play requires ────────────────

@@ -38,12 +38,14 @@ own search indexing and every "is this app any good" glance both pick up.
 
 ## Two things to redo before you publish
 
-1. **`06_plus.png` should be re-shot from a Play build.** These were captured
-   from a sideloaded debug build, where Play returns no products — so the card
-   shows the fallback "from $29.99/yr" and **no 3-day trial ribbon**. Once the
-   subscriptions exist and you install from Internal Testing, retake this one
-   screen and the caption should become **"Try Plus free for 3 days"**, which
-   is the stronger line. Everything else on the frame is final.
+1. **`06_plus.png` should be re-shot from a Play build.** It was captured
+   from a sideload, where Play returns no products — so the cards show the
+   fallback "from $29.99/yr" and there is **no 3-day trial ribbon**. (The
+   frame is a cropped detail rather than a whole phone precisely because the
+   full screen carries a "plans can't be loaded" notice that no Play build
+   ever shows; it must not reach the store.) Once the subscriptions exist and
+   you install from Internal Testing, retake it as a normal phone frame and
+   change the caption to **"Try Plus free for 3 days"** — the stronger line.
 
 2. **The paintings in frames 3–5 came from the local mock**, not the real
    image model, so they are simpler than what ships. Retake 3, 4 and 5 against
