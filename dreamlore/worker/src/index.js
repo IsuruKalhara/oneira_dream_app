@@ -186,7 +186,15 @@ export default {
         return json({ error: `${quota.reason} limit reached`, ...quota, upgrade: false }, 429);
       }
       try {
-        const prompt = buildImagePrompt(dream, Array.isArray(body?.symbols) ? body.symbols : []);
+        // Retrieve the same passages the reading was grounded in. It is an
+        // in-bundle scan costing about a millisecond and no subrequest, so
+        // there is no reason for the picture to be a second, separate guess at
+        // the dream — it should paint what the books beside it describe.
+        const passages = retrieve(dream, Number(env.TOP_K || 6));
+        const prompt = buildImagePrompt(dream, {
+          symbols: Array.isArray(body?.symbols) ? body.symbols : [],
+          passages,
+        });
         const img = await generateImage({ apiKey: env.OPENAI_API_KEY, prompt });
         return json({ image: img.b64, mime: img.mime, model: img.model, quota: { tier, day: quota.day, month: quota.month } });
       } catch (e) {

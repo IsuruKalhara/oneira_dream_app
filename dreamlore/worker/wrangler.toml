@@ -17,6 +17,20 @@ TOP_K = "6"
 GLOBAL_DAILY_CALLS = "500"   # whole deployment per day (~$0.30 at current cost)
 IP_DAILY_CALLS = "20"        # one IP address per day
 
+# Subscriptions — Google Play Billing, verified against the Play Developer API.
+# The product ids must match Config in the Flutter app and the subscriptions in
+# Play Console. Both grant the same 'paid' tier; only the period and the yearly
+# plan's free trial differ.
+#
+# These MUST stay inside [vars]. They previously sat after [[kv_namespaces]],
+# where TOML reads them as fields of that table rather than as environment
+# variables — so env.ANDROID_PACKAGE_NAME was undefined, isPlayConfigured() was
+# permanently false, and every purchase would have verified as
+# "play_not_configured" no matter how correct the service-account secret was.
+ANDROID_PACKAGE_NAME = "com.bitfuzed.dreamlore"
+PLAY_MONTHLY_PRODUCT_ID = "dreamlore_plus_monthly"
+PLAY_YEARLY_PRODUCT_ID = "dreamlore_plus_yearly"
+
 # Only read when LLM_PROVIDER = "claude".
 CLAUDE_MODEL = "claude-sonnet-5"
 CLAUDE_EFFORT = "medium"
@@ -31,13 +45,6 @@ id = "9cb1b7f59ae849bab6f051e6d54e8d5c"
 # embedding provider are needed, so neither is configured here. Rebuild kb.json
 # and redeploy whenever the knowledge base changes.
 
-# Subscriptions — Google Play Billing, verified against the Play Developer API.
-# The product ids must match Config in the Flutter app and the subscriptions in
-# Play Console. Both grant the same 'paid' tier; only the period and the yearly
-# plan's free trial differ.
-ANDROID_PACKAGE_NAME = "com.bitfuzed.dreamlore"
-PLAY_MONTHLY_PRODUCT_ID = "dreamlore_plus_monthly"
-PLAY_YEARLY_PRODUCT_ID = "dreamlore_plus_yearly"
 
 # Secrets (NOT here — set with `wrangler secret put`):
 #   OPENAI_API_KEY              (required while LLM_PROVIDER = "openai")
