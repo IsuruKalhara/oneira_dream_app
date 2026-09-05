@@ -8,8 +8,14 @@ import 'package:path_provider/path_provider.dart';
 /// Where generated dream pictures live: one JPEG per dream, in the app's own
 /// documents directory. Local-only, like the journal itself.
 class ImageStore {
+  /// Overrides the storage root. Only tests pass this: it lets the naming and
+  /// cleanup rules be exercised without a platform channel, which is the whole
+  /// reason the stale-image bug shipped unnoticed.
+  final Directory? root;
+  const ImageStore({this.root});
+
   Future<Directory> _dir() async {
-    final base = await getApplicationDocumentsDirectory();
+    final base = root ?? await getApplicationDocumentsDirectory();
     final dir = Directory(p.join(base.path, 'dream_images'));
     if (!await dir.exists()) await dir.create(recursive: true);
     return dir;
