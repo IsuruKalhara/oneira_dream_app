@@ -39,7 +39,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         // Explicit padding drops the extendBody inset — add the nav-bar
         // clearance back or the disclaimer/device-id footer hides under it.
         padding: EdgeInsets.fromLTRB(
-            22, 0, 22, 28 + MediaQuery.paddingOf(context).bottom),
+          22,
+          0,
+          22,
+          28 + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           _Group(
             children: [
@@ -52,7 +56,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     : TextButton(
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute(
-                              builder: (_) => const PaywallScreen()),
+                            builder: (_) => const PaywallScreen(),
+                          ),
                         ),
                         child: const Text('Upgrade'),
                       ),
@@ -92,18 +97,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _Row(
                 icon: Icons.privacy_tip_outlined,
                 title: 'Privacy Policy',
-                trailing: const Icon(Icons.open_in_new,
-                    size: 17, color: Ob.muted),
+                trailing: const Icon(
+                  Icons.open_in_new,
+                  size: 17,
+                  color: Ob.muted,
+                ),
                 onTap: () =>
                     openLegalUrl(context, 'Privacy Policy', Config.privacyUrl),
               ),
               _Row(
                 icon: Icons.description_outlined,
                 title: 'Terms of Use',
-                trailing: const Icon(Icons.open_in_new,
-                    size: 17, color: Ob.muted),
+                trailing: const Icon(
+                  Icons.open_in_new,
+                  size: 17,
+                  color: Ob.muted,
+                ),
                 onTap: () =>
                     openLegalUrl(context, 'Terms of Use', Config.termsUrl),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _Group(
+            children: [
+              _Row(
+                icon: Icons.replay_rounded,
+                title: 'See the welcome again',
+                subtitle: 'Replay the first-run introduction',
+                onTap: () async {
+                  await ref.read(settingsServiceProvider).setOnboarded(false);
+                  ref.read(appGateProvider.notifier).recompute();
+                },
               ),
             ],
           ),
@@ -145,29 +170,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _reminder = enable);
     if (enable) {
-      final ok =
-          await ref.read(notificationServiceProvider).enableDaily();
+      final ok = await ref.read(notificationServiceProvider).enableDaily();
       if (!mounted) return;
       if (!ok) {
         // Permission denied: the switch must not lie about a reminder that
         // will never fire.
         setState(() => _reminder = false);
-        messenger.showSnackBar(SnackBar(
-          content:
-              const Text('Notifications are turned off for Dreamlore.'),
-          action: SnackBarAction(
-            label: 'Open settings',
-            onPressed: () => openAppSettings(),
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Text('Notifications are turned off for Dreamlore.'),
+            action: SnackBarAction(
+              label: 'Open settings',
+              onPressed: () => openAppSettings(),
+            ),
           ),
-        ));
+        );
         return;
       }
-      messenger.showSnackBar(const SnackBar(
-          content: Text('Reminder set for 7:00 each morning')));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Reminder set for 7:00 each morning')),
+      );
     } else {
       await ref.read(notificationServiceProvider).disable();
     }
-    await ref.read(settingsServiceProvider).setReminderEnabled(enable && _reminder);
+    await ref
+        .read(settingsServiceProvider)
+        .setReminderEnabled(enable && _reminder);
   }
 
   Future<void> _openPlaySubscriptions() async {
@@ -186,11 +214,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final result = await ref.read(entitlementProvider.notifier).restore();
-      messenger.showSnackBar(SnackBar(
-        content: Text(result.entitled
-            ? 'Restored — Dreamlore Plus is active.'
-            : 'No previous purchases found for this Google account.'),
-      ));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            result.entitled
+                ? 'Restored — Dreamlore Plus is active.'
+                : 'No previous purchases found for this Google account.',
+          ),
+        ),
+      );
     } catch (_) {
       messenger.showSnackBar(
         const SnackBar(content: Text("Couldn't restore purchases.")),
@@ -204,22 +236,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (_) => AlertDialog(
         title: const Text('Clear all dreams?'),
         content: const Text(
-            'This permanently deletes every saved dream on this device.'),
+          'This permanently deletes every saved dream on this device.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete all')),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete all'),
+          ),
         ],
       ),
     );
     if (ok == true) {
       await ref.read(dreamRepositoryProvider).clearAll();
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('All dreams cleared')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('All dreams cleared')));
       }
     }
   }
@@ -232,14 +268,14 @@ class _Group extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.045),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
-        ),
-        child: Column(children: children),
-      );
+    clipBehavior: Clip.antiAlias,
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.045),
+      borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+    ),
+    child: Column(children: children),
+  );
 }
 
 class _Row extends StatelessWidget {
@@ -286,25 +322,29 @@ class _Row extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: tint ?? Ob.parchment,
-                        )),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: tint ?? Ob.parchment,
+                      ),
+                    ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 3),
-                      Text(subtitle!,
-                          style: const TextStyle(
-                              fontSize: 12.5, height: 1.4, color: Ob.muted)),
+                      Text(
+                        subtitle!,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          height: 1.4,
+                          color: Ob.muted,
+                        ),
+                      ),
                     ],
                   ],
                 ),
               ),
-              if (trailing != null) ...[
-                const SizedBox(width: 10),
-                trailing!,
-              ],
+              if (trailing != null) ...[const SizedBox(width: 10), trailing!],
             ],
           ),
         ),

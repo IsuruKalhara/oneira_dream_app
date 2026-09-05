@@ -19,17 +19,17 @@ class Interpretation {
   });
 
   factory Interpretation.fromJson(Map<String, dynamic> j) => Interpretation(
-        explanation: (j['explanation'] ?? '') as String,
-        reflection: (j['reflection'] ?? '') as String,
-        symbols: ((j['symbols'] ?? []) as List)
-            .map((e) => DreamSymbol.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        quotes: ((j['quotes'] ?? []) as List)
-            .map((e) => Quote.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        model: (j['_meta']?['model'] ?? j['provider'] ?? '') as String,
-        provider: (j['provider'] ?? '') as String,
-      );
+    explanation: (j['explanation'] ?? '') as String,
+    reflection: (j['reflection'] ?? '') as String,
+    symbols: ((j['symbols'] ?? []) as List)
+        .map((e) => DreamSymbol.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    quotes: ((j['quotes'] ?? []) as List)
+        .map((e) => Quote.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    model: (j['_meta']?['model'] ?? j['provider'] ?? '') as String,
+    provider: (j['provider'] ?? '') as String,
+  );
 
   String symbolsJson() => jsonEncode(symbols.map((s) => s.toJson()).toList());
   String quotesJson() => jsonEncode(quotes.map((q) => q.toJson()).toList());
@@ -41,9 +41,9 @@ class DreamSymbol {
   const DreamSymbol({required this.symbol, required this.meaning});
 
   factory DreamSymbol.fromJson(Map<String, dynamic> j) => DreamSymbol(
-        symbol: (j['symbol'] ?? '') as String,
-        meaning: (j['meaning'] ?? '') as String,
-      );
+    symbol: (j['symbol'] ?? '') as String,
+    meaning: (j['meaning'] ?? '') as String,
+  );
   Map<String, dynamic> toJson() => {'symbol': symbol, 'meaning': meaning};
 }
 
@@ -54,11 +54,15 @@ class Quote {
   const Quote({required this.book, required this.author, required this.text});
 
   factory Quote.fromJson(Map<String, dynamic> j) => Quote(
-        book: (j['book'] ?? '') as String,
-        author: (j['author'] ?? '') as String,
-        text: (j['text'] ?? '') as String,
-      );
-  Map<String, dynamic> toJson() => {'book': book, 'author': author, 'text': text};
+    book: (j['book'] ?? '') as String,
+    author: (j['author'] ?? '') as String,
+    text: (j['text'] ?? '') as String,
+  );
+  Map<String, dynamic> toJson() => {
+    'book': book,
+    'author': author,
+    'text': text,
+  };
 }
 
 /// Quota snapshot from `/usage` or attached to an `/explain` response.
@@ -81,12 +85,12 @@ class QuotaInfo {
   bool get isPaid => tier == 'paid';
 
   factory QuotaInfo.fromUsageJson(Map<String, dynamic> j) => QuotaInfo(
-        tier: (j['tier'] ?? 'free') as String,
-        dayUsed: (j['day']?['used'] ?? 0) as int,
-        dayLimit: (j['day']?['limit'] ?? 0) as int,
-        monthUsed: (j['month']?['used'] ?? 0) as int,
-        monthLimit: (j['month']?['limit'] ?? 0) as int,
-      );
+    tier: (j['tier'] ?? 'free') as String,
+    dayUsed: (j['day']?['used'] ?? 0) as int,
+    dayLimit: (j['day']?['limit'] ?? 0) as int,
+    monthUsed: (j['month']?['used'] ?? 0) as int,
+    monthLimit: (j['month']?['limit'] ?? 0) as int,
+  );
 }
 
 /// Thrown when the proxy returns 429 (daily/monthly cap hit).
@@ -94,7 +98,11 @@ class QuotaExceededException implements Exception {
   final String reason; // 'daily' | 'monthly'
   final DateTime? resetsAt;
   final bool upgrade; // true when a free user could upgrade
-  const QuotaExceededException(this.reason, {this.resetsAt, this.upgrade = false});
+  const QuotaExceededException(
+    this.reason, {
+    this.resetsAt,
+    this.upgrade = false,
+  });
 
   @override
   String toString() => 'QuotaExceededException($reason)';

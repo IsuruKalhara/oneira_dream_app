@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/errors.dart';
 import '../../data/api/dream_api.dart';
 import '../../data/models.dart';
 import '../../data/safety.dart';
@@ -24,10 +26,12 @@ class RecordState {
   final QuotaExceededException? quotaError;
   final String? error;
   final RecordErrorSource? errorSource;
+
+  /// Set the moment the reading is saved — which is the moment it arrives.
   final String? savedId;
 
-  /// The dream's picture, generated after the reading. Kept in memory until
-  /// the dream is saved, when it is written next to the entry.
+  /// The dream's picture. Painted right after the reading for Plus, kept in
+  /// memory for the reveal, and written next to the entry as soon as it lands.
   final Uint8List? imageBytes;
   final DreamImageStatus imageStatus;
   final String? imageError;
@@ -64,21 +68,20 @@ class RecordState {
     DreamImageStatus? imageStatus,
     String? imageError, // transient
     bool imageNeedsPlus = false, // transient
-  }) =>
-      RecordState(
-        status: status ?? this.status,
-        transcript: transcript ?? this.transcript,
-        interpretation: interpretation ?? this.interpretation,
-        quota: quota ?? this.quota,
-        savedId: savedId ?? this.savedId,
-        quotaError: quotaError,
-        error: error,
-        errorSource: errorSource,
-        imageBytes: imageBytes ?? this.imageBytes,
-        imageStatus: imageStatus ?? this.imageStatus,
-        imageError: imageError,
-        imageNeedsPlus: imageNeedsPlus,
-      );
+  }) => RecordState(
+    status: status ?? this.status,
+    transcript: transcript ?? this.transcript,
+    interpretation: interpretation ?? this.interpretation,
+    quota: quota ?? this.quota,
+    savedId: savedId ?? this.savedId,
+    quotaError: quotaError,
+    error: error,
+    errorSource: errorSource,
+    imageBytes: imageBytes ?? this.imageBytes,
+    imageStatus: imageStatus ?? this.imageStatus,
+    imageError: imageError,
+    imageNeedsPlus: imageNeedsPlus,
+  );
 }
 
 class RecordController extends Notifier<RecordState> {
@@ -96,18 +99,21 @@ class RecordController extends Notifier<RecordState> {
     if (!ok) {
       state = state.copyWith(
         status: RecordStatus.error,
-        error: 'Microphone or speech recognition is unavailable. '
+        error:
+            'Microphone or speech recognition is unavailable. '
             'Check the app permissions and try again.',
         errorSource: RecordErrorSource.mic,
       );
       return;
     }
     state = state.copyWith(status: RecordStatus.listening, transcript: '');
-    await _stt.start(onResult: (text, _) {
-      if (state.status == RecordStatus.listening) {
-        state = state.copyWith(transcript: text);
-      }
-    });
+    await _stt.start(
+      onResult: (text, _) {
+        if (state.status == RecordStatus.listening) {
+          state = state.copyWith(transcript: text);
+        }
+      },
+    );
   }
 
   Future<void> stop() async {
@@ -120,10 +126,13 @@ class RecordController extends Notifier<RecordState> {
   }
 
   void editTranscript(String t) => state = state.copyWith(
-        transcript: t,
-        status: t.trim().isEmpty ? RecordStatus.idle : RecordStatus.ready,
-      );
+    transcript: t,
+    status: t.trim().isEmpty ? RecordStatus.idle : RecordStatus.ready,
+  );
 
+  /// Reads the dream, saves the reading the moment it arrives, and — on Plus
+  /// — starts painting it straight away. The free tier may only get one
+  /// reading a day, so nothing about it is ever left to a "Save" tap.
   Future<void> interpret() async {
     final text = state.transcript.trim();
     if (text.isEmpty) return;
@@ -136,12 +145,17 @@ class RecordController extends Notifier<RecordState> {
     state = state.copyWith(status: RecordStatus.interpreting);
     try {
       final res = await ref.read(dreamApiProvider).explain(text);
+      final id = await _save(text, res.interpretation);
       state = state.copyWith(
         status: RecordStatus.done,
         interpretation: res.interpretation,
         quota: res.quota,
+        savedId: id,
       );
       ref.invalidate(quotaProvider);
+      // Plus: the picture is part of the reading, not a second ask. Free: the
+      // card shows the invitation, and the upsell is one tap away.
+      if (ref.read(entitlementProvider)) unawaited(imagine());
     } on QuotaExceededException catch (e) {
       state = state.copyWith(status: RecordStatus.error, quotaError: e);
     } catch (e) {
@@ -153,9 +167,23 @@ class RecordController extends Notifier<RecordState> {
     }
   }
 
-  /// Paints the dream. The caller has already decided this device may (it
-  /// checks the entitlement first and shows the upsell otherwise); the proxy
-  /// still has the final say, and a 403 here means the entitlement lapsed.
+  Future<String> _save(String text, Interpretation interp) async {
+    final id = state.savedId ?? const Uuid().v4();
+    await ref
+        .read(dreamRepositoryProvider)
+        .save(
+          id: id,
+          createdAt: DateTime.now(),
+          transcript: text,
+          interp: interp,
+        );
+    return id;
+  }
+
+  /// Paints the dream and writes the picture into the saved entry. The caller
+  /// has already decided this device may (it checks the entitlement first and
+  /// shows the upsell otherwise); the proxy still has the final say, and a 403
+  /// here means the entitlement lapsed.
   Future<void> imagine() async {
     final interp = state.interpretation;
     final text = state.transcript.trim();
@@ -167,6 +195,11 @@ class RecordController extends Notifier<RecordState> {
       final bytes = await ref
           .read(dreamApiProvider)
           .imagine(text, symbols: interp.symbols);
+      final id = state.savedId;
+      if (id != null) {
+        final path = await ref.read(imageStoreProvider).save(id, bytes);
+        await ref.read(dreamRepositoryProvider).setImagePath(id, path);
+      }
       state = state.copyWith(
         imageStatus: DreamImageStatus.ready,
         imageBytes: bytes,
@@ -177,6 +210,7 @@ class RecordController extends Notifier<RecordState> {
         imageStatus: DreamImageStatus.idle,
         imageNeedsPlus: true,
       );
+      unawaited(ref.read(entitlementProvider.notifier).refresh());
     } on QuotaExceededException catch (e) {
       state = state.copyWith(
         imageStatus: DreamImageStatus.error,
@@ -184,29 +218,15 @@ class RecordController extends Notifier<RecordState> {
             ? "You've painted all your dreams for this month."
             : "You've painted all your dreams for today.",
       );
-    } catch (_) {
-      state = state.copyWith(imageStatus: DreamImageStatus.error);
+    } catch (e) {
+      final f = Friendly.of(e);
+      state = state.copyWith(
+        imageStatus: DreamImageStatus.error,
+        imageError: f.offline
+            ? "You're offline — the reading is saved; paint it from your journal later."
+            : null,
+      );
     }
-  }
-
-  Future<String?> save() async {
-    final interp = state.interpretation;
-    if (interp == null) return null;
-    final id = const Uuid().v4();
-    var imagePath = '';
-    final bytes = state.imageBytes;
-    if (bytes != null) {
-      imagePath = await ref.read(imageStoreProvider).save(id, bytes);
-    }
-    await ref.read(dreamRepositoryProvider).save(
-          id: id,
-          createdAt: DateTime.now(),
-          transcript: state.transcript.trim(),
-          interp: interp,
-          imagePath: imagePath,
-        );
-    state = state.copyWith(savedId: id);
-    return id;
   }
 
   void reset() => state = const RecordState();

@@ -87,8 +87,9 @@ class AuthService {
   Future<void> _ensureGoogleInitialized() async {
     if (_googleReady) return;
     await GoogleSignIn.instance.initialize(
-      serverClientId:
-          Config.googleWebClientId.isEmpty ? null : Config.googleWebClientId,
+      serverClientId: Config.googleWebClientId.isEmpty
+          ? null
+          : Config.googleWebClientId,
     );
     _googleReady = true;
   }
@@ -168,13 +169,13 @@ class AuthService {
       _settings.setAccount(email: '', name: '');
 
   String _describe(GoogleSignInException e) => switch (e.code) {
-        GoogleSignInExceptionCode.clientConfigurationError =>
-          'Google Sign-In is misconfigured. Check the web client id and the '
-              "app's SHA-1 fingerprints in Firebase.",
-        GoogleSignInExceptionCode.providerConfigurationError =>
-          'Google Play services is unavailable or out of date on this device.',
-        GoogleSignInExceptionCode.uiUnavailable =>
-          "Google Sign-In couldn't open. Please try again.",
-        _ => e.description ?? 'Sign-in failed. Please try again.',
-      };
+    GoogleSignInExceptionCode.clientConfigurationError =>
+      'Google Sign-In is misconfigured. Check the web client id and the '
+          "app's SHA-1 fingerprints in Firebase.",
+    GoogleSignInExceptionCode.providerConfigurationError =>
+      'Google Play services is unavailable or out of date on this device.',
+    GoogleSignInExceptionCode.uiUnavailable =>
+      "Google Sign-In couldn't open. Please try again.",
+    _ => e.description ?? 'Sign-in failed. Please try again.',
+  };
 }

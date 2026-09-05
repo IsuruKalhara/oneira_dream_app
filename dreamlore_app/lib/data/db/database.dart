@@ -32,18 +32,18 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) => m.createAll(),
-        onUpgrade: (m, from, to) async {
-          // v2: dream pictures. Additive, so existing journals carry on.
-          if (from < 2) await m.addColumn(dreamEntries, dreamEntries.imagePath);
-        },
-      );
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      // v2: dream pictures. Additive, so existing journals carry on.
+      if (from < 2) await m.addColumn(dreamEntries, dreamEntries.imagePath);
+    },
+  );
 
   static QueryExecutor _open() => driftDatabase(name: 'dreamlore');
 
-  Stream<List<DreamEntry>> watchAll() =>
-      (select(dreamEntries)..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
-          .watch();
+  Stream<List<DreamEntry>> watchAll() => (select(
+    dreamEntries,
+  )..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).watch();
 
   Future<List<DreamEntry>> allOnce() => select(dreamEntries).get();
 
@@ -54,8 +54,9 @@ class AppDatabase extends _$AppDatabase {
       into(dreamEntries).insertOnConflictUpdate(entry);
 
   Future<void> setImagePath(String id, String path) =>
-      (update(dreamEntries)..where((t) => t.id.equals(id)))
-          .write(DreamEntriesCompanion(imagePath: Value(path)));
+      (update(dreamEntries)..where((t) => t.id.equals(id))).write(
+        DreamEntriesCompanion(imagePath: Value(path)),
+      );
 
   Future<void> deleteById(String id) =>
       (delete(dreamEntries)..where((t) => t.id.equals(id))).go();

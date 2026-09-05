@@ -33,8 +33,11 @@ class PurchaseSuccessScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(flex: 2),
-              Icon(Icons.check_circle_outline,
-                  size: 64, color: t.colorScheme.primary),
+              Icon(
+                Icons.check_circle_outline,
+                size: 64,
+                color: t.colorScheme.primary,
+              ),
               const SizedBox(height: 24),
               Text(
                 onTrial ? 'Your trial has started' : 'Welcome to Plus',
@@ -45,13 +48,14 @@ class PurchaseSuccessScreen extends StatelessWidget {
               Text(
                 onTrial
                     ? 'Dreamlore Plus is yours for the next $days days, free. '
-                        'Google Play will email you before it renews — cancel '
-                        'before then and you are not charged.'
+                          'Google Play will email you before it renews — cancel '
+                          'before then and you are not charged.'
                     : 'Dreamlore Plus is active. Manage or cancel it any time '
-                        'in Google Play.',
+                          'in Google Play.',
                 textAlign: TextAlign.center,
-                style: t.textTheme.titleMedium
-                    ?.copyWith(color: t.colorScheme.onSurfaceVariant),
+                style: t.textTheme.titleMedium?.copyWith(
+                  color: t.colorScheme.onSurfaceVariant,
+                ),
               ),
               const Spacer(flex: 3),
               FilledButton(

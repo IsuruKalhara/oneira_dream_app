@@ -8,7 +8,11 @@ import 'package:url_launcher/url_launcher.dart';
 /// selectable text (the previous behavior) is a known rejection pattern.
 /// The dialog survives only as the failure fallback, so the URL is still
 /// reachable on a device with no browser.
-Future<void> openLegalUrl(BuildContext context, String title, String url) async {
+Future<void> openLegalUrl(
+  BuildContext context,
+  String title,
+  String url,
+) async {
   var opened = false;
   try {
     opened = await launchUrl(

@@ -59,7 +59,13 @@ product ids match `dreamlore_app/lib/core/config.dart`:
 | `dreamlore_plus_monthly` | monthly, auto-renewing | none |
 | `dreamlore_plus_yearly` | yearly, auto-renewing | **Free trial, 3 days**, new customers only |
 
-- [ ] Create both subscriptions, activate the base plans, and set prices.
+- [ ] Create both subscriptions, activate the base plans, and set prices:
+      **monthly $4.99, yearly $29.99** (USD; let Play convert the rest). These
+      are the reference prices in `config.dart` — the paywall shows them as
+      "from …" only when Play cannot supply a localized price. Research
+      (Sep 2026): DreamApp $7.99/mo · $47.99/yr, Dream Book $6.99/mo ·
+      $34.99/yr with a 7-day trial, Dream Interpreter AI $4.99/mo. Plus lands
+      under all three and the yearly reads as $2.50 a month.
 - [ ] Add the **3-day free trial offer** to the yearly base plan. The paywall
       reads the trial length off the offer itself, so change it in Play Console
       and the app follows — there is no constant to keep in step. A user who has
@@ -132,4 +138,7 @@ unconfigured; it is compiled out of release builds.
 cd dreamlore && npm run download && npm run ingest && npm run serve
 # app (Android emulator: use 10.0.2.2; iOS sim: localhost)
 cd dreamlore_app && flutter run --dart-define=DREAMLORE_API_BASE=http://localhost:8787
+# On a phone with Play, add --dart-define=DREAMLORE_DEV_PAID=true to try the
+# Plus picture flow against the local proxy (debug builds only; the proxy still
+# decides what it serves).
 ```

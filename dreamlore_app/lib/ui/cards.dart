@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'motion.dart';
 import 'night.dart';
 
 /// Card-and-pill vocabulary, in the idiom of Moonly's bento onboarding:
@@ -17,19 +18,19 @@ class BigTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        header: true,
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 30,
-            height: 1.22,
-            fontWeight: FontWeight.w700,
-            color: Ob.parchment,
-            letterSpacing: -0.4,
-          ),
-        ),
-      );
+    header: true,
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontSize: 30,
+        height: 1.22,
+        fontWeight: FontWeight.w700,
+        color: Ob.parchment,
+        letterSpacing: -0.4,
+      ),
+    ),
+  );
 }
 
 /// Centred supporting line under a [BigTitle].
@@ -39,14 +40,10 @@ class Sub extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 15,
-          height: 1.5,
-          color: Ob.muted,
-        ),
-      );
+    text,
+    textAlign: TextAlign.center,
+    style: const TextStyle(fontSize: 15, height: 1.5, color: Ob.muted),
+  );
 }
 
 /// Small translucent label that sits on a card, Moonly-style.
@@ -230,7 +227,9 @@ class OptionCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 15.5,
                         height: 1.35,
-                        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                         color: selected ? Ob.parchment : Ob.muted,
                       ),
                     ),
@@ -250,8 +249,11 @@ class OptionCard extends StatelessWidget {
                       ),
                     ),
                     child: selected
-                        ? const Icon(Icons.check_rounded,
-                            size: 15, color: Ob.ink)
+                        ? const Icon(
+                            Icons.check_rounded,
+                            size: 15,
+                            color: Ob.ink,
+                          )
                         : null,
                   ),
                 ],
@@ -310,19 +312,23 @@ class InfoCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Ob.parchment,
-                      )),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Ob.parchment,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(body,
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        height: 1.45,
-                        color: Ob.muted,
-                      )),
+                  Text(
+                    body,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      height: 1.45,
+                      color: Ob.muted,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -351,43 +357,50 @@ class PrimaryPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton(
-      onPressed: busy ? null : onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: Ob.parchment,
-        foregroundColor: Ob.ink,
-        // Disabled reads as an empty card, not as washed-out parchment —
-        // a dimmed fill looked like a broken button rather than an inactive one.
-        disabledBackgroundColor: Colors.white.withValues(alpha: 0.06),
-        disabledForegroundColor: Ob.muted,
-        minimumSize: const Size.fromHeight(60),
-        shape: const StadiumBorder(),
-      ),
-      child: busy
-          ? const SizedBox(
-              height: 22,
-              width: 22,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Ob.ink),
-            )
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(label,
-                    style: const TextStyle(
-                        fontSize: 16.5, fontWeight: FontWeight.w700)),
-                if (sub != null) ...[
-                  const SizedBox(height: 1),
+    return PressScale(
+      enabled: onPressed != null && !busy,
+      child: FilledButton(
+        onPressed: busy ? null : onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: Ob.parchment,
+          foregroundColor: Ob.ink,
+          // Disabled reads as an empty card, not as washed-out parchment —
+          // a dimmed fill looked like a broken button rather than an inactive one.
+          disabledBackgroundColor: Colors.white.withValues(alpha: 0.06),
+          disabledForegroundColor: Ob.muted,
+          minimumSize: const Size.fromHeight(60),
+          shape: const StadiumBorder(),
+        ),
+        child: busy
+            ? const SizedBox(
+                height: 22,
+                width: 22,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Ob.ink),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Text(
-                    sub!,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: Ob.ink.withValues(alpha: 0.62),
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if (sub != null) ...[
+                    const SizedBox(height: 1),
+                    Text(
+                      sub!,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: Ob.ink.withValues(alpha: 0.62),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            ),
+              ),
+      ),
     );
   }
 }
@@ -411,12 +424,13 @@ class GhostPill extends StatelessWidget {
           side: BorderSide(color: Colors.white.withValues(alpha: 0.09)),
         ),
       ),
-      child: Text(label,
-          style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Generated card imagery
@@ -477,10 +491,7 @@ class _NebulaPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Colors.transparent,
-            Ob.inkDeep.withValues(alpha: 0.45),
-          ],
+          colors: [Colors.transparent, Ob.inkDeep.withValues(alpha: 0.45)],
         ).createShader(Offset.zero & size),
     );
   }

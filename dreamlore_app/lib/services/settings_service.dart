@@ -93,11 +93,11 @@ class SettingsService {
     await prefs.remove(_entExpiry);
     await prefs.remove(_entToken);
   }
+
   /// Null when the user skipped the question, or onboarded before it existed.
   DreamIntent? get intent => DreamIntent.fromId(prefs.getString(_intent));
-  Future<void> setIntent(DreamIntent? v) => v == null
-      ? prefs.remove(_intent)
-      : prefs.setString(_intent, v.id);
+  Future<void> setIntent(DreamIntent? v) =>
+      v == null ? prefs.remove(_intent) : prefs.setString(_intent, v.id);
 
   /// True once we've shown the system microphone prompt. iOS only ever shows it
   /// once per install, so a second "Allow" tap must deep-link to Settings

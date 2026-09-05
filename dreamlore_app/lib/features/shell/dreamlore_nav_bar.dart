@@ -153,8 +153,9 @@ class _NavButton extends StatelessWidget {
               // A small lift on selection — enough to feel responsive to the
               // tap, not enough to be a bounce.
               scale: selected ? 1.0 : 0.92,
-              duration:
-                  reduceMotion ? Duration.zero : const Duration(milliseconds: 340),
+              duration: reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 340),
               curve: Curves.easeOutBack,
               child: Icon(
                 selected ? item.activeIcon : item.icon,
@@ -164,8 +165,9 @@ class _NavButton extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             AnimatedDefaultTextStyle(
-              duration:
-                  reduceMotion ? Duration.zero : const Duration(milliseconds: 240),
+              duration: reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 240),
               style: TextStyle(
                 fontSize: 10.5,
                 height: 1,

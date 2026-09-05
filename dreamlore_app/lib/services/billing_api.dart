@@ -11,9 +11,9 @@ class VerifiedEntitlement {
   });
 
   const VerifiedEntitlement.free()
-      : tierName = 'free',
-        expiryMs = 0,
-        state = '';
+    : tierName = 'free',
+      expiryMs = 0,
+      state = '';
 
   final String tierName;
 
@@ -49,8 +49,10 @@ class BillingVerificationUnavailable implements Exception {
 /// tampered app can lie to its own UI but not to our model budget.
 class BillingApi {
   BillingApi({required this.deviceToken, Dio? dio})
-      : _dio = dio ??
-            Dio(BaseOptions(
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
               baseUrl: Config.apiBase,
               connectTimeout: const Duration(seconds: 15),
               receiveTimeout: const Duration(seconds: 20),
@@ -58,7 +60,8 @@ class BillingApi {
                 'content-type': 'application/json',
                 'x-device-token': deviceToken,
               },
-            ));
+            ),
+          );
 
   final Dio _dio;
   final String deviceToken;
@@ -67,18 +70,19 @@ class BillingApi {
   Future<VerifiedEntitlement> verify({
     required String productId,
     required String purchaseToken,
-  }) =>
-      _post('/billing/verify', {
-        'productId': productId,
-        'purchaseToken': purchaseToken,
-      });
+  }) => _post('/billing/verify', {
+    'productId': productId,
+    'purchaseToken': purchaseToken,
+  });
 
   /// Re-reads the entitlement the server last verified for this device, so a
   /// lapsed subscription is noticed even with no purchase token to hand.
   Future<VerifiedEntitlement> state() => _post('/billing/state', const {});
 
   Future<VerifiedEntitlement> _post(
-      String path, Map<String, Object?> body) async {
+    String path,
+    Map<String, Object?> body,
+  ) async {
     try {
       final res = await _dio.post(path, data: body);
       final data = res.data;

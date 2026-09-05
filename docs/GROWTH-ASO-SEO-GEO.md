@@ -202,10 +202,49 @@ cited before training. Both reward the same things:
 | Onboarding | 4 pages, ends with a mic ask that is explained | Permission granted in context → first dream logged |
 | First reading | Quote card + **"See your dream" card with PLUS pill** | Curiosity gap: the feature is visible, unlocked in one tap |
 | Tap (free user) | Blurred painting behind glass, lock, one CTA | Loss aversion + curiosity; no dark patterns, "Maybe later" honest |
+| First reading (Plus) | The painting starts on its own the moment the reading lands — no second tap — and settles in with a glow | The feature pays off immediately; the wait is narrated, not blank |
+| Share | "Share" on any painting composes a 4:5 card: the painting, one line of the dream in the app serif, the Dreamlore mark, and the store link in the share text | The picture is the shareable hook; every share carries the brand and a way in, with no account or upload |
 | Paywall | Yearly pre-selected, trial ribbon, savings %, "How the trial works" timeline | Trial anxiety removed; price from Play in their currency |
 | Success | "Your trial has started" + when the charge lands | Trust → fewer refunds and chargebacks |
 
 ---
+
+## 7b. Price
+
+| App | Monthly | Yearly | Trial |
+|---|---|---|---|
+| DreamApp | $7.99 | $47.99 | — |
+| Dream Book | $6.99 | $34.99 | 7 days |
+| Dream Interpreter AI | $4.99 | — | 7 days |
+| **Dreamlore Plus** | **$4.99** | **$29.99** (≈ $2.50/mo) | **3 days**, yearly |
+
+Under every comparable on both plans, with the yearly framed per month on the
+paywall. The short trial is deliberate: three days is long enough to log two
+mornings and see a painting, short enough that the charge date is memorable —
+that is what the "How the trial works" timeline on the paywall is for. Revisit
+after 60 days of Play data; the lever to pull first is yearly price, not monthly.
+
+## 7c. Staying — what brings people back
+
+Dream apps churn because the morning is the only moment that matters and
+nothing pulls the user into it. Four things in the app carry retention, in
+order of weight:
+
+1. **The morning reminder** (Settings → on by default after onboarding's mic
+   step is granted). It is the whole loop: wake, tap, talk. Ask for it once,
+   in context, never with a modal.
+2. **The picture.** A painting of last night is the thing people open the app
+   to look at again and the thing they show someone. Plus users get one on
+   every reading with no second tap; free users see the invitation on every
+   reading.
+3. **The week strip on Patterns.** Seven dots, filled or not. No streak
+   counter, no guilt copy — a rhythm is legible without being a score.
+4. **Plain words.** "Your dream", "What does it mean?", "What keeps coming
+   back". Anyone half-awake understands the whole app on first open, which is
+   the retention lever nobody measures.
+
+Measure: D1 and D7 return rate by whether the reminder is on; readings per
+week; share taps per painting. Change the reminder copy before anything else.
 
 ## 8. Launch order (do these in sequence)
 

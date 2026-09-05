@@ -13,8 +13,9 @@ import '../services/settings_service.dart';
 import '../services/subscription_service.dart';
 
 /// Overridden in main() after async init.
-final sharedPreferencesProvider =
-    Provider<SharedPreferences>((ref) => throw UnimplementedError());
+final sharedPreferencesProvider = Provider<SharedPreferences>(
+  (ref) => throw UnimplementedError(),
+);
 final deviceIdProvider = Provider<String>((ref) => throw UnimplementedError());
 
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -24,10 +25,12 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 });
 
 final dreamRepositoryProvider = Provider<DreamRepository>(
-    (ref) => DreamRepository(ref.watch(databaseProvider)));
+  (ref) => DreamRepository(ref.watch(databaseProvider)),
+);
 
 final dreamApiProvider = Provider<DreamApi>(
-    (ref) => DreamApi(deviceId: ref.watch(deviceIdProvider)));
+  (ref) => DreamApi(deviceId: ref.watch(deviceIdProvider)),
+);
 
 final sttServiceProvider = Provider<SttService>((ref) {
   final s = SttService();
@@ -38,13 +41,16 @@ final sttServiceProvider = Provider<SttService>((ref) {
 final imageStoreProvider = Provider<ImageStore>((ref) => ImageStore());
 
 final settingsServiceProvider = Provider<SettingsService>(
-    (ref) => SettingsService(ref.watch(sharedPreferencesProvider)));
+  (ref) => SettingsService(ref.watch(sharedPreferencesProvider)),
+);
 
 final authServiceProvider = Provider<AuthService>(
-    (ref) => AuthService(ref.watch(settingsServiceProvider)));
+  (ref) => AuthService(ref.watch(settingsServiceProvider)),
+);
 
 final billingApiProvider = Provider<BillingApi>(
-    (ref) => BillingApi(deviceToken: ref.watch(deviceIdProvider)));
+  (ref) => BillingApi(deviceToken: ref.watch(deviceIdProvider)),
+);
 
 final subscriptionServiceProvider = Provider<SubscriptionService>((ref) {
   final s = SubscriptionService(
@@ -79,8 +85,9 @@ class SignedInController extends Notifier<bool> {
   void resync() => state = ref.read(authServiceProvider).isSignedIn;
 }
 
-final signedInProvider =
-    NotifierProvider<SignedInController, bool>(SignedInController.new);
+final signedInProvider = NotifierProvider<SignedInController, bool>(
+  SignedInController.new,
+);
 
 /// Whether Dreamlore Plus is active, kept in step with purchases that land
 /// outside a paywall tap (a startup restore, a deferred payment clearing).
@@ -94,8 +101,9 @@ class EntitlementController extends Notifier<bool> {
   }
 
   Future<PurchaseOutcome> purchase(BillingPeriod period) async {
-    final outcome =
-        await ref.read(subscriptionServiceProvider).purchase(period);
+    final outcome = await ref
+        .read(subscriptionServiceProvider)
+        .purchase(period);
     _sync();
     return outcome;
   }
@@ -122,19 +130,24 @@ class EntitlementController extends Notifier<bool> {
   }
 }
 
-final entitlementProvider =
-    NotifierProvider<EntitlementController, bool>(EntitlementController.new);
+final entitlementProvider = NotifierProvider<EntitlementController, bool>(
+  EntitlementController.new,
+);
 
-final notificationServiceProvider =
-    Provider<NotificationService>((ref) => NotificationService());
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => NotificationService(),
+);
 
 /// Live stream of saved dreams (local DB).
-final dreamsStreamProvider = StreamProvider((ref) =>
-    ref.watch(dreamRepositoryProvider).watchAll());
+final dreamsStreamProvider = StreamProvider(
+  (ref) => ref.watch(dreamRepositoryProvider).watchAll(),
+);
 
 /// Current quota snapshot (for the record screen banner). Refresh after each
 /// interpretation.
-final quotaProvider = FutureProvider((ref) => ref.watch(dreamApiProvider).usage());
+final quotaProvider = FutureProvider(
+  (ref) => ref.watch(dreamApiProvider).usage(),
+);
 
 /// Which of the first-run screens the app should be showing.
 enum AppStage { signIn, onboarding, paywall, main }

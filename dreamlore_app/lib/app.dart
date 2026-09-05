@@ -10,6 +10,9 @@ import 'features/auth/sign_in_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/paywall/paywall_screen.dart';
 import 'features/shell/main_shell.dart';
+import 'ui/motion.dart';
+import 'ui/night.dart';
+import 'widgets/brand_mark.dart';
 
 class DreamloreApp extends ConsumerStatefulWidget {
   const DreamloreApp({super.key});
@@ -67,7 +70,53 @@ class _DreamloreAppState extends ConsumerState<DreamloreApp>
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.dark,
-      home: const _Gate(),
+      home: const _Launch(child: _Gate()),
+    );
+  }
+}
+
+/// The first Flutter frame: the same mark on the same ink as the native
+/// splash, held for a beat and then dissolved into whichever screen the gate
+/// chose. The native splash hands off to this with no visible seam, and this
+/// hands off to the app with a fade instead of a cut.
+class _Launch extends StatefulWidget {
+  final Widget child;
+  const _Launch({required this.child});
+
+  @override
+  State<_Launch> createState() => _LaunchState();
+}
+
+class _LaunchState extends State<_Launch> {
+  bool _done = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 650), () {
+      if (mounted) setState(() => _done = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        widget.child,
+        IgnorePointer(
+          ignoring: _done,
+          child: AnimatedOpacity(
+            opacity: _done ? 0 : 1,
+            duration: Motion.slow,
+            curve: Curves.easeOut,
+            child: const ColoredBox(
+              color: Ob.ink,
+              child: Center(child: BrandMark(size: 108, withName: true)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

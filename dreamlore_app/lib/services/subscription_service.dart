@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
+
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/billing_client_wrappers.dart'
     show PricingPhaseWrapper, ReplacementMode;
@@ -68,9 +70,9 @@ class SubscriptionService {
     required SettingsService settings,
     required BillingApi billing,
     InAppPurchase? iap,
-  })  : _settings = settings,
-        _billing = billing,
-        _iap = iap ?? InAppPurchase.instance {
+  }) : _settings = settings,
+       _billing = billing,
+       _iap = iap ?? InAppPurchase.instance {
     _sub = _iap.purchaseStream.listen(_enqueue, onError: (_) {});
   }
 
@@ -108,8 +110,9 @@ class SubscriptionService {
 
   /// True while the cached entitlement is still paid through.
   bool get isPaid =>
+      (kDebugMode && Config.devPaid) ||
       _settings.tierName == Config.paidTier &&
-      _settings.entitlementExpiryMs > DateTime.now().millisecondsSinceEpoch;
+          _settings.entitlementExpiryMs > DateTime.now().millisecondsSinceEpoch;
 
   /// Emits whenever the entitlement changes, including changes that arrive on
   /// their own (a startup restore, a deferred purchase clearing while the app
@@ -211,8 +214,9 @@ class SubscriptionService {
 
   /// ISO-8601 billing periods, as Play writes them: P3D, P1W, P1M, P1Y.
   int? _daysInPeriod(String iso) {
-    final m = RegExp(r'^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$')
-        .firstMatch(iso);
+    final m = RegExp(
+      r'^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$',
+    ).firstMatch(iso);
     if (m == null) return null;
     final years = int.tryParse(m.group(1) ?? '') ?? 0;
     final months = int.tryParse(m.group(2) ?? '') ?? 0;
@@ -226,8 +230,9 @@ class SubscriptionService {
   /// plugin does for the first phase — everything that isn't a digit, a
   /// separator, or whitespace.
   String? _symbolOf(String formattedPrice) {
-    final symbol =
-        formattedPrice.replaceAll(RegExp(r'[\d.,\s\u00a0]'), '').trim();
+    final symbol = formattedPrice
+        .replaceAll(RegExp(r'[\d.,\s\u00a0]'), '')
+        .trim();
     return symbol.isEmpty ? null : symbol;
   }
 
@@ -242,7 +247,8 @@ class SubscriptionService {
   ProductDetails? _offerFor(BillingPeriod period) {
     final offers = _offers[_productIdFor(period)];
     if (offers == null || offers.isEmpty) return null;
-    final sorted = [...offers]..sort((a, b) => a.rawPrice.compareTo(b.rawPrice));
+    final sorted = [...offers]
+      ..sort((a, b) => a.rawPrice.compareTo(b.rawPrice));
     return sorted.first;
   }
 
@@ -281,7 +287,8 @@ class SubscriptionService {
     final isChange = owned != null && owned.productID != product.id;
     // Yearly → monthly commits less money, so it waits for the period already
     // paid for to run out rather than charging again now.
-    final isDowngrade = isChange &&
+    final isDowngrade =
+        isChange &&
         owned.productID == Config.yearlyProductId &&
         product.id == Config.monthlyProductId;
 
@@ -467,8 +474,7 @@ class SubscriptionService {
       if (_isOurProduct(purchase.productID)) {
         await _settings.setEntitlement(
           tierName: Config.paidTier,
-          expiryMs:
-              DateTime.now().add(_unverifiedGrace).millisecondsSinceEpoch,
+          expiryMs: DateTime.now().add(_unverifiedGrace).millisecondsSinceEpoch,
           purchaseToken: token,
         );
       }

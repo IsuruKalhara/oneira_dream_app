@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import '../../core/config.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -112,8 +114,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Future<void> _continue() async {
     if (ref.read(entitlementProvider)) return;
     if (_price(_period) == null) {
-      _notify("This plan isn't available right now. Try the other plan, or "
-          'check back shortly.');
+      _notify(
+        "This plan isn't available right now. Try the other plan, or "
+        'check back shortly.',
+      );
       return;
     }
     final confirmed = await _confirmSheet(_period);
@@ -122,8 +126,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     setState(() => _busy = true);
     unawaited(HapticFeedback.mediumImpact());
     try {
-      final outcome =
-          await ref.read(entitlementProvider.notifier).purchase(_period);
+      final outcome = await ref
+          .read(entitlementProvider.notifier)
+          .purchase(_period);
       if (!mounted) return;
       switch (outcome) {
         case PurchaseOutcome.activated:
@@ -131,10 +136,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           if (!mounted) return;
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => PurchaseSuccessScreen(
-                period: _period,
-                trialDays: _trialDays,
-              ),
+              builder: (_) =>
+                  PurchaseSuccessScreen(period: _period, trialDays: _trialDays),
             ),
           );
           if (!mounted) return;
@@ -147,8 +150,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           }
         case PurchaseOutcome.scheduled:
           setState(() => _busy = false);
-          _notify('Your plan will change when the current period ends. '
-              'Nothing to do until then.');
+          _notify(
+            'Your plan will change when the current period ends. '
+            'Nothing to do until then.',
+          );
         case PurchaseOutcome.pending:
           setState(() => _busy = false);
           _notify(_pendingMessage);
@@ -173,9 +178,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       final result = await ref.read(entitlementProvider.notifier).restore();
       if (!mounted) return;
       setState(() => _busy = false);
-      _notify(result.entitled
-          ? 'Restored — Dreamlore Plus is active.'
-          : 'No previous purchases found for this Google account.');
+      _notify(
+        result.entitled
+            ? 'Restored — Dreamlore Plus is active.'
+            : 'No previous purchases found for this Google account.',
+      );
       if (result.entitled) {
         await ref.read(settingsServiceProvider).setPaywallSeen(true);
         if (!mounted) return;
@@ -205,7 +212,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   String _ctaLabel(bool isPaid) {
     if (isPaid) return 'Your current plan';
     if (_loadingPrices) return 'Loading plans…';
-    if (!_storeAvailable) return 'Plans unavailable';
+    if (!_storeAvailable) return 'Available on Google Play';
     if (_price(_period) == null) return "This plan isn't available yet";
     if (_period == BillingPeriod.monthly) {
       return 'Continue · ${_price(_period)}/mo';
@@ -229,28 +236,33 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(withTrial ? 'Start your free trial' : 'Confirm subscription',
-                style: t.textTheme.headlineSmall),
+            Text(
+              withTrial ? 'Start your free trial' : 'Confirm subscription',
+              style: t.textTheme.headlineSmall,
+            ),
             const SizedBox(height: 12),
             Text(
               withTrial
                   ? 'Dreamlore Plus — free for $_trialDays days, then '
-                      '${price ?? ''} a year, billed by Google Play. Cancel any '
-                      'time before the trial ends and you are not charged.'
+                        '${price ?? ''} a year, billed by Google Play. Cancel any '
+                        'time before the trial ends and you are not charged.'
                   : 'Dreamlore Plus — ${price ?? ''} a '
-                      '${isYearly ? 'year' : 'month'}, billed by Google Play. '
-                      'Cancel any time.',
-              style: t.textTheme.bodyMedium
-                  ?.copyWith(color: t.colorScheme.onSurfaceVariant),
+                        '${isYearly ? 'year' : 'month'}, billed by Google Play. '
+                        'Cancel any time.',
+              style: t.textTheme.bodyMedium?.copyWith(
+                color: t.colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => Navigator.pop(sheetContext, true),
-              child: Text(withTrial
-                  ? 'Start free trial'
-                  : (price == null
-                      ? 'Confirm'
-                      : 'Confirm · $price/${isYearly ? 'yr' : 'mo'}')),
+              child: Text(
+                withTrial
+                    ? 'Start free trial'
+                    : (price == null
+                          ? 'Confirm'
+                          : 'Confirm · $price/${isYearly ? 'yr' : 'mo'}'),
+              ),
             ),
             const SizedBox(height: 4),
             TextButton(
@@ -294,35 +306,57 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                 children: [
-                  Text('Dream more,\nread deeper.',
-                      style: t.textTheme.displaySmall?.copyWith(height: 1.1)),
+                  Text(
+                    'Dream more,\nread deeper.',
+                    style: t.textTheme.displaySmall?.copyWith(height: 1.1),
+                  ),
                   const SizedBox(height: 10),
                   Text(
                     'Recording, transcription and your journal stay free. Plus '
                     'buys room for more readings, and longer ones.',
-                    style: t.textTheme.bodyMedium
-                        ?.copyWith(color: t.colorScheme.onSurfaceVariant),
+                    style: t.textTheme.bodyMedium?.copyWith(
+                      color: t.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  _benefit(t, Icons.auto_awesome,
-                      'More interpretations every day and every month'),
-                  _benefit(t, Icons.psychology_alt,
-                      'Deeper readings, with more of the source behind them'),
-                  _benefit(t, Icons.insights,
-                      'Full symbol-trend insights across your whole journal'),
-                  _benefit(t, Icons.favorite_border,
-                      'Supports an independent, ad-free app'),
+                  _benefit(
+                    t,
+                    Icons.auto_awesome,
+                    'More interpretations every day and every month',
+                  ),
+                  _benefit(
+                    t,
+                    Icons.psychology_alt,
+                    'Deeper readings, with more of the source behind them',
+                  ),
+                  _benefit(
+                    t,
+                    Icons.insights,
+                    'Full symbol-trend insights across your whole journal',
+                  ),
+                  _benefit(
+                    t,
+                    Icons.favorite_border,
+                    'Supports an independent, ad-free app',
+                  ),
                   const SizedBox(height: 28),
                   _PlanCard(
                     title: 'Yearly',
                     tagline: math == null
-                        ? 'Best value'
+                        ? (_price(BillingPeriod.yearly) == null &&
+                                  !_loadingPrices
+                              ? '≈ ${Config.referenceYearlyPerMonth} a month, billed yearly'
+                              : 'Best value')
                         : '≈ ${math.perMonth} a month, billed yearly',
                     badge: (math?.savePercent ?? 0) > 0
                         ? 'Save ${math!.savePercent}%'
                         : 'Best value',
                     ribbon: _hasTrial ? '$_trialDays-day free trial' : null,
-                    price: _price(BillingPeriod.yearly),
+                    price:
+                        _price(BillingPeriod.yearly) ??
+                        (_loadingPrices
+                            ? null
+                            : 'from ${Config.referenceYearlyPrice}'),
                     priceSuffix: '/yr',
                     loadingPrice: _loadingPrices,
                     selected: _period == BillingPeriod.yearly,
@@ -334,7 +368,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   _PlanCard(
                     title: 'Monthly',
                     tagline: 'Cancel any time',
-                    price: _price(BillingPeriod.monthly),
+                    price:
+                        _price(BillingPeriod.monthly) ??
+                        (_loadingPrices
+                            ? null
+                            : 'from ${Config.referenceMonthlyPrice}'),
                     priceSuffix: '/mo',
                     loadingPrice: _loadingPrices,
                     selected: _period == BillingPeriod.monthly,
@@ -361,8 +399,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     Text(
                       "Plans can't be loaded right now. Check your connection, "
                       "and that you're signed in to Google Play.",
-                      style: t.textTheme.bodySmall
-                          ?.copyWith(color: t.colorScheme.onSurfaceVariant),
+                      style: t.textTheme.bodySmall?.copyWith(
+                        color: t.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ],
@@ -391,23 +430,26 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   const SizedBox(height: 6),
                   TextButton(
                     onPressed: _busy ? null : _dismiss,
-                    child: Text(widget.firstRun
-                        ? 'Continue with the free plan'
-                        : 'Not now'),
+                    child: Text(
+                      widget.firstRun
+                          ? 'Continue with the free plan'
+                          : 'Not now',
+                    ),
                   ),
                   Text(
                     _period == BillingPeriod.monthly
                         ? 'Renews monthly until cancelled. Cancel any time in '
-                            'Google Play. Terms & Privacy apply.'
+                              'Google Play. Terms & Privacy apply.'
                         : _hasTrial
-                            ? 'Free for $_trialDays days, then renews yearly '
-                                'until cancelled. Cancel any time in Google '
-                                'Play. Terms & Privacy apply.'
-                            : 'Renews yearly until cancelled. Cancel any time '
-                                'in Google Play. Terms & Privacy apply.',
+                        ? 'Free for $_trialDays days, then renews yearly '
+                              'until cancelled. Cancel any time in Google '
+                              'Play. Terms & Privacy apply.'
+                        : 'Renews yearly until cancelled. Cancel any time '
+                              'in Google Play. Terms & Privacy apply.',
                     textAlign: TextAlign.center,
-                    style: t.textTheme.labelSmall
-                        ?.copyWith(color: t.colorScheme.onSurfaceVariant),
+                    style: t.textTheme.labelSmall?.copyWith(
+                      color: t.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -419,16 +461,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Widget _benefit(ThemeData t, IconData icon, String s) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 7),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 20, color: t.colorScheme.primary),
-            const SizedBox(width: 14),
-            Expanded(child: Text(s, style: t.textTheme.bodyLarge)),
-          ],
-        ),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 7),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: t.colorScheme.primary),
+        const SizedBox(width: 14),
+        Expanded(child: Text(s, style: t.textTheme.bodyLarge)),
+      ],
+    ),
+  );
 }
 
 /// One selectable plan. The trial reads as a property of the yearly plan —
@@ -520,16 +562,19 @@ class _PlanCard extends StatelessWidget {
     // ("LKR 1,000.00") scale down instead of crushing the text column.
     final priceText = price != null
         ? Text.rich(
-            TextSpan(children: [
-              TextSpan(text: price, style: t.textTheme.titleLarge),
-              TextSpan(text: ' $priceSuffix', style: t.textTheme.labelMedium),
-            ]),
+            TextSpan(
+              children: [
+                TextSpan(text: price, style: t.textTheme.titleLarge),
+                TextSpan(text: ' $priceSuffix', style: t.textTheme.labelMedium),
+              ],
+            ),
             maxLines: 1,
           )
         : Text(
             loadingPrice ? '…' : '—',
-            style: t.textTheme.titleLarge
-                ?.copyWith(color: t.colorScheme.onSurfaceVariant),
+            style: t.textTheme.titleLarge?.copyWith(
+              color: t.colorScheme.onSurfaceVariant,
+            ),
           );
 
     return Column(
@@ -551,28 +596,35 @@ class _PlanCard extends StatelessWidget {
             if (badge != null) ...[
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: t.colorScheme.primary,
                   borderRadius: BorderRadius.circular(100),
                 ),
-                child: Text(badge!,
-                    style: t.textTheme.labelSmall
-                        ?.copyWith(color: t.colorScheme.onPrimary)),
+                child: Text(
+                  badge!,
+                  style: t.textTheme.labelSmall?.copyWith(
+                    color: t.colorScheme.onPrimary,
+                  ),
+                ),
               ),
             ],
             const Spacer(),
             const SizedBox(width: 8),
-            Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: priceText)),
+            Flexible(
+              child: FittedBox(fit: BoxFit.scaleDown, child: priceText),
+            ),
           ],
         ),
         const SizedBox(height: 4),
         Padding(
           padding: const EdgeInsets.only(left: 34),
-          child: Text(tagline,
-              style: t.textTheme.bodySmall
-                  ?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+          child: Text(
+            tagline,
+            style: t.textTheme.bodySmall?.copyWith(
+              color: t.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
       ],
     );
@@ -637,9 +689,12 @@ class _TrialTimeline extends StatelessWidget {
                     children: [
                       Text(steps[i].$2, style: t.textTheme.labelLarge),
                       const SizedBox(height: 2),
-                      Text(steps[i].$3,
-                          style: t.textTheme.bodySmall?.copyWith(
-                              color: t.colorScheme.onSurfaceVariant)),
+                      Text(
+                        steps[i].$3,
+                        style: t.textTheme.bodySmall?.copyWith(
+                          color: t.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ),

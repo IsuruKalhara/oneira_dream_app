@@ -11,6 +11,16 @@ class Config {
   );
 
   static const String appName = 'Dreamlore';
+
+  /// Debug builds only: pretend this device is on Plus, so the picture flow
+  /// can be exercised against a local proxy on a phone that has Play (whose
+  /// startup restore would otherwise clear any entitlement). The real backend
+  /// still gates pictures on its own — this cannot obtain one it would refuse.
+  ///   flutter run --dart-define=DREAMLORE_DEV_PAID=true
+  static const bool devPaid = bool.fromEnvironment(
+    'DREAMLORE_DEV_PAID',
+    defaultValue: false,
+  );
   static const String privacyUrl = 'https://tropicalai.net/dreamlore/privacy';
   static const String termsUrl = 'https://tropicalai.net/dreamlore/terms';
 
@@ -38,6 +48,17 @@ class Config {
   // reads it from the Play offer itself (SubscriptionService.trialDays), so it
   // always matches what Play Console is set to, and it correctly shows no trial
   // to someone who has already used theirs.
+
+  /// Reference prices, USD. These are what to enter in Play Console (see
+  /// SHIP.md §3) and what the paywall shows as "from …" when Play cannot
+  /// supply a localized price (sideloads, no Play Services). The store's own
+  /// price always wins the moment it is available, and the purchase sheet
+  /// only ever quotes the store. Research, Sep 2026: DreamApp $7.99/$47.99,
+  /// Dream Book $6.99/$34.99, Dream Interpreter AI $4.99/mo — Plus sits under
+  /// all three, and yearly reads as $2.50 a month.
+  static const String referenceMonthlyPrice = r'$4.99';
+  static const String referenceYearlyPrice = r'$29.99';
+  static const String referenceYearlyPerMonth = r'$2.50';
 
   /// The tier name the Worker grants a subscriber (see worker/src/index.js).
   static const String paidTier = 'paid';

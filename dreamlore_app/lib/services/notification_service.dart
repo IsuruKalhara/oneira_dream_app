@@ -27,7 +27,8 @@ class NotificationService {
       requestSoundPermission: false,
     );
     await _plugin.initialize(
-        settings: const InitializationSettings(android: android, iOS: ios));
+      settings: const InitializationSettings(android: android, iOS: ios),
+    );
     _inited = true;
   }
 
@@ -38,10 +39,14 @@ class NotificationService {
       await _init();
 
       var granted = true;
-      final android = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-      final ios = _plugin.resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>();
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      final ios = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
       if (android != null) {
         granted = await android.requestNotificationsPermission() ?? true;
       } else if (ios != null) {

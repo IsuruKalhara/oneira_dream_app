@@ -20,20 +20,23 @@ class DreamRepository {
     required Interpretation interp,
     String imagePath = '',
   }) {
-    return db.upsert(DreamEntriesCompanion.insert(
-      id: id,
-      createdAt: createdAt,
-      transcript: transcript,
-      explanation: Value(interp.explanation),
-      reflection: Value(interp.reflection),
-      symbolsJson: Value(interp.symbolsJson()),
-      quotesJson: Value(interp.quotesJson()),
-      model: Value(interp.model),
-      imagePath: Value(imagePath),
-    ));
+    return db.upsert(
+      DreamEntriesCompanion.insert(
+        id: id,
+        createdAt: createdAt,
+        transcript: transcript,
+        explanation: Value(interp.explanation),
+        reflection: Value(interp.reflection),
+        symbolsJson: Value(interp.symbolsJson()),
+        quotesJson: Value(interp.quotesJson()),
+        model: Value(interp.model),
+        imagePath: Value(imagePath),
+      ),
+    );
   }
 
-  Future<void> setImagePath(String id, String path) => db.setImagePath(id, path);
+  Future<void> setImagePath(String id, String path) =>
+      db.setImagePath(id, path);
 }
 
 /// Parse the stored JSON columns back into UI models.

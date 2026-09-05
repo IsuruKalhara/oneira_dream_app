@@ -18,8 +18,10 @@ class SafetyCheck {
     RegExp(r"\bwanna\s+die\b", caseSensitive: false),
     RegExp(r"\bend(ing)?\s+(my|it)\s+(life|all)\b", caseSensitive: false),
     RegExp(r"\bself[-\s]?harm", caseSensitive: false),
-    RegExp(r"\bno\s+(reason|point)\s+(to\s+live|in\s+living)\b",
-        caseSensitive: false),
+    RegExp(
+      r"\bno\s+(reason|point)\s+(to\s+live|in\s+living)\b",
+      caseSensitive: false,
+    ),
     RegExp(r"\bbetter\s+off\s+without\s+me\b", caseSensitive: false),
   ];
 

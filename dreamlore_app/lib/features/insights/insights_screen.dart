@@ -15,23 +15,31 @@ class InsightsScreen extends ConsumerWidget {
     final dreams = ref.watch(dreamsStreamProvider);
 
     return NightScaffold(
-      title: 'Insights',
+      title: 'Patterns',
       padded: false,
       child: dreams.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(
-          icon: Icons.error_outline,
-          tint: Theme.of(context).colorScheme.error,
-          title: "Couldn't read your patterns",
-          body: 'Your entries are safe on this device. Reopening the app '
+          icon: Icons.insights_outlined,
+          title: "Couldn't load your patterns",
+          body:
+              'Your entries are safe on this device. Reopening the app '
               'usually clears this.',
+          action: SizedBox(
+            width: 220,
+            child: PrimaryPill(
+              label: 'Try again',
+              onPressed: () => ref.invalidate(dreamsStreamProvider),
+            ),
+          ),
         ),
         data: (list) {
           if (list.isEmpty) {
             return const EmptyState(
               icon: Icons.insights_outlined,
               title: 'Nothing to see yet',
-              body: 'Patterns appear here once you have a few nights logged — '
+              body:
+                  'Patterns appear here once you have a few nights logged — '
                   'the symbols that keep coming back, and how often you dream.',
             );
           }
@@ -50,20 +58,27 @@ class InsightsScreen extends ConsumerWidget {
           final maxCount = topN.isEmpty ? 1 : topN.first.value;
 
           final weekAgo = DateTime.now().subtract(const Duration(days: 7));
-          final thisWeek = list.where((e) => e.createdAt.isAfter(weekAgo)).length;
+          final thisWeek = list
+              .where((e) => e.createdAt.isAfter(weekAgo))
+              .length;
 
           // Which of the last seven nights have an entry — Open's week strip.
           // A rhythm is legible at a glance in a way a count never is.
           final today = DateTime.now();
           final week = List.generate(7, (i) {
-            final day = DateTime(today.year, today.month, today.day)
-                .subtract(Duration(days: 6 - i));
+            final day = DateTime(
+              today.year,
+              today.month,
+              today.day,
+            ).subtract(Duration(days: 6 - i));
             return (
               day: day,
-              logged: list.any((e) =>
-                  e.createdAt.year == day.year &&
-                  e.createdAt.month == day.month &&
-                  e.createdAt.day == day.day),
+              logged: list.any(
+                (e) =>
+                    e.createdAt.year == day.year &&
+                    e.createdAt.month == day.month &&
+                    e.createdAt.day == day.day,
+              ),
             );
           });
 
@@ -72,7 +87,11 @@ class InsightsScreen extends ConsumerWidget {
             // hand — an explicit padding opts this list out of the automatic
             // MediaQuery padding the other lists get.
             padding: EdgeInsets.fromLTRB(
-                22, 0, 22, 28 + MediaQuery.paddingOf(context).bottom),
+              22,
+              0,
+              22,
+              28 + MediaQuery.paddingOf(context).bottom,
+            ),
             children: [
               _WeekStrip(week: week),
               const SizedBox(height: 22),
@@ -83,14 +102,20 @@ class InsightsScreen extends ConsumerWidget {
               Row(
                 children: [
                   Expanded(
-                      child: _Stat(
-                          value: '${list.length}',
-                          label: 'dreams logged',
-                          seed: 1)),
+                    child: _Stat(
+                      value: '${list.length}',
+                      label: 'dreams logged',
+                      seed: 1,
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
-                      child: _Stat(
-                          value: '$thisWeek', label: 'this week', seed: 2)),
+                    child: _Stat(
+                      value: '$thisWeek',
+                      label: 'this week',
+                      seed: 2,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 26),
@@ -98,12 +123,13 @@ class InsightsScreen extends ConsumerWidget {
                 const InfoCard(
                   icon: Icons.auto_awesome,
                   title: 'No recurring symbols yet',
-                  body: 'Symbols surface once the same image shows up on more '
+                  body:
+                      'Symbols surface once the same image shows up on more '
                       'than one night.',
                 )
               else ...[
                 const Text(
-                  'RECURRING SYMBOLS',
+                  'WHAT KEEPS COMING BACK',
                   style: TextStyle(
                     fontSize: 10.5,
                     letterSpacing: 1.3,
@@ -117,8 +143,9 @@ class InsightsScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.045),
                     borderRadius: BorderRadius.circular(22),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.07)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.07),
+                    ),
                   ),
                   child: Column(
                     children: [
@@ -172,8 +199,10 @@ class _Stat extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(label,
-                      style: const TextStyle(fontSize: 12.5, color: Ob.muted)),
+                  Text(
+                    label,
+                    style: const TextStyle(fontSize: 12.5, color: Ob.muted),
+                  ),
                 ],
               ),
             ),
@@ -215,8 +244,10 @@ class _Bar extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text('$count',
-                    style: const TextStyle(fontSize: 13, color: Ob.muted)),
+                Text(
+                  '$count',
+                  style: const TextStyle(fontSize: 13, color: Ob.muted),
+                ),
               ],
             ),
             const SizedBox(height: 7),
@@ -227,17 +258,16 @@ class _Bar extends StatelessWidget {
               child: Stack(
                 children: [
                   Container(
-                      height: 8, color: Colors.white.withValues(alpha: 0.06)),
+                    height: 8,
+                    color: Colors.white.withValues(alpha: 0.06),
+                  ),
                   FractionallySizedBox(
                     widthFactor: (count / max).clamp(0.04, 1.0),
                     child: Container(
                       height: 8,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            primary.withValues(alpha: 0.65),
-                            primary,
-                          ],
+                          colors: [primary.withValues(alpha: 0.65), primary],
                         ),
                       ),
                     ),
@@ -251,7 +281,6 @@ class _Bar extends StatelessWidget {
     );
   }
 }
-
 
 /// Seven nights, one dot each. Filled means a dream was logged.
 class _WeekStrip extends StatelessWidget {
@@ -299,7 +328,8 @@ class _WeekStrip extends StatelessWidget {
                       border: d.logged
                           ? null
                           : Border.all(
-                              color: Colors.white.withValues(alpha: 0.16)),
+                              color: Colors.white.withValues(alpha: 0.16),
+                            ),
                     ),
                   ),
                 ],
@@ -367,7 +397,9 @@ class _HeroSymbol extends StatelessWidget {
                               ? 'on one night so far'
                               : 'across $count nights',
                           style: const TextStyle(
-                              fontSize: 13.5, color: Ob.muted),
+                            fontSize: 13.5,
+                            color: Ob.muted,
+                          ),
                         ),
                       ],
                     ),

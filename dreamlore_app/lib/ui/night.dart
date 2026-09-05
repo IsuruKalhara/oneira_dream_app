@@ -40,21 +40,20 @@ class Ob {
 
   /// Constrains and centres content so it stays readable on any width.
   static Widget measure({required Widget child}) => Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: maxContentWidth),
-          child: child,
-        ),
-      );
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: maxContentWidth),
+      child: child,
+    ),
+  );
 
   // ── Type ──────────────────────────────────────────────────────────────────
-  // No font files ship with the app. 'Georgia' exists on iOS and most Android
-  // OEM images; 'New York' is the iOS system serif; generic 'serif' resolves to
-  // Noto Serif on Android. Worst case a platform serif renders — verified on an
-  // Android emulator, where Noto Serif picks it up cleanly.
+  // Newsreader ships with the app (assets/fonts). The fallbacks only matter if
+  // the asset ever fails to load: 'Georgia' exists on iOS and most Android OEM
+  // images, generic 'serif' resolves to Noto Serif on Android.
   static const _serifStack = <String>[
+    'Georgia',
     'New York',
     'Times New Roman',
-    'Times',
     'serif',
   ];
 
@@ -65,29 +64,30 @@ class Ob {
     double height = 1.15,
     double letterSpacing = 0,
     FontStyle style = FontStyle.normal,
-  }) =>
-      TextStyle(
-        fontFamily: 'Georgia',
-        fontFamilyFallback: _serifStack,
-        fontSize: size,
-        fontWeight: weight,
-        fontStyle: style,
-        color: color,
-        height: height,
-        letterSpacing: letterSpacing,
-      );
+  }) => TextStyle(
+    fontFamily: 'Newsreader',
+    fontFamilyFallback: _serifStack,
+    fontSize: size,
+    fontWeight: weight,
+    fontStyle: style,
+    color: color,
+    height: height,
+    letterSpacing: letterSpacing,
+  );
 
   /// Letterspaced uppercase label. Extends the eyebrow style already used by
   /// `InterpretationView`, so onboarding and the reading share a house style.
   static TextStyle eyebrow(BuildContext context, {Color? color}) =>
       Theme.of(context).textTheme.labelSmall!.copyWith(
-            letterSpacing: 1.6,
-            fontWeight: FontWeight.w600,
-            color: color ?? Theme.of(context).colorScheme.primary,
-          );
+        letterSpacing: 1.6,
+        fontWeight: FontWeight.w600,
+        color: color ?? Theme.of(context).colorScheme.primary,
+      );
 
   static TextStyle body(BuildContext context, {Color color = muted}) =>
-      Theme.of(context).textTheme.bodyLarge!.copyWith(color: color, height: 1.55);
+      Theme.of(
+        context,
+      ).textTheme.bodyLarge!.copyWith(color: color, height: 1.55);
 }
 
 /// Hairline rule — the recurring structural device.
@@ -337,12 +337,12 @@ class MoonDisc extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomPaint(
-        size: Size.square(size),
-        painter: _MoonPainter(
-          phase: phase,
-          glow: glow ?? Theme.of(context).colorScheme.primary,
-        ),
-      );
+    size: Size.square(size),
+    painter: _MoonPainter(
+      phase: phase,
+      glow: glow ?? Theme.of(context).colorScheme.primary,
+    ),
+  );
 }
 
 class _MoonPainter extends CustomPainter {
@@ -372,7 +372,10 @@ class _MoonPainter extends CustomPainter {
       r * 1.6,
       Paint()
         ..shader = RadialGradient(
-          colors: [glow.withValues(alpha: 0.34 * phase), Colors.transparent],
+          colors: [
+            glow.withValues(alpha: 0.34 * phase),
+            Colors.transparent,
+          ],
           stops: const [0.42, 1.0],
         ).createShader(Rect.fromCircle(center: c, radius: r * 1.6)),
     );
@@ -474,21 +477,17 @@ class Orb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(
-          painter: _OrbPainter(color: color, lit: lit),
-          child: icon == null
-              ? null
-              : Center(
-                  child: Icon(
-                    icon,
-                    size: size * 0.36,
-                    color: lit ? Ob.ink : color,
-                  ),
-                ),
-        ),
-      );
+    width: size,
+    height: size,
+    child: CustomPaint(
+      painter: _OrbPainter(color: color, lit: lit),
+      child: icon == null
+          ? null
+          : Center(
+              child: Icon(icon, size: size * 0.36, color: lit ? Ob.ink : color),
+            ),
+    ),
+  );
 }
 
 class _OrbPainter extends CustomPainter {
@@ -506,7 +505,10 @@ class _OrbPainter extends CustomPainter {
       r * 1.55,
       Paint()
         ..shader = RadialGradient(
-          colors: [color.withValues(alpha: lit ? 0.34 : 0.16), Colors.transparent],
+          colors: [
+            color.withValues(alpha: lit ? 0.34 : 0.16),
+            Colors.transparent,
+          ],
           stops: const [0.45, 1.0],
         ).createShader(Rect.fromCircle(center: c, radius: r * 1.55)),
     );
@@ -519,7 +521,11 @@ class _OrbPainter extends CustomPainter {
           center: const Alignment(-0.4, -0.5),
           radius: 1.1,
           colors: lit
-              ? [Colors.white, color, Color.alphaBlend(Ob.ink.withValues(alpha: 0.45), color)]
+              ? [
+                  Colors.white,
+                  color,
+                  Color.alphaBlend(Ob.ink.withValues(alpha: 0.45), color),
+                ]
               : [
                   color.withValues(alpha: 0.30),
                   color.withValues(alpha: 0.12),
@@ -677,8 +683,10 @@ class _StaggerItem extends StatelessWidget {
     return FadeTransition(
       opacity: curve,
       child: SlideTransition(
-        position:
-            Tween(begin: const Offset(0, 0.12), end: Offset.zero).animate(curve),
+        position: Tween(
+          begin: const Offset(0, 0.12),
+          end: Offset.zero,
+        ).animate(curve),
         child: child,
       ),
     );

@@ -2,13 +2,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/config.dart';
+import '../../core/errors.dart';
 import '../../providers/providers.dart';
 import '../../services/auth_service.dart';
+import '../../ui/cards.dart';
+import '../../ui/motion.dart';
+import '../../ui/night.dart';
+import '../../widgets/google_g.dart';
+import '../../widgets/brand_mark.dart';
 
 /// The first screen of a fresh install. One account, one tap — the journal
 /// itself stays on the device, so this is about carrying a subscription
 /// between devices, not about handing over a diary.
+///
+/// It is also the first thing anyone sees after the splash, so it is set in
+/// the same night as everything after it: the mark, the name in the serif,
+/// one line of promise, one warm button.
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
 
@@ -38,110 +47,137 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         setState(() => _busy = false);
         _notify(e.message);
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        _notify('Sign-in failed. Please try again.');
+        final f = Friendly.of(e);
+        _notify(
+          f.offline
+              ? "You're offline. Connect and try again."
+              : "Couldn't sign in. Please try again.",
+        );
       }
     }
   }
 
   void _notify(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 6)),
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 6),
+      ),
     );
+  }
+
+  Future<void> _skip() async {
+    await ref.read(signedInProvider.notifier).continueWithoutAccount();
+    if (!mounted) return;
+    ref.read(appGateProvider.notifier).recompute();
   }
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context);
     final configured = ref.read(authServiceProvider).isConfigured;
+    final bottom = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(flex: 2),
-              Icon(Icons.nightlight_round,
-                  size: 56, color: t.colorScheme.primary),
-              const SizedBox(height: 24),
-              Text(Config.appName,
-                  style: t.textTheme.displaySmall, textAlign: TextAlign.center),
-              const SizedBox(height: 10),
-              Text(
-                'Speak your dream when you wake.\nGet a reading grounded in real books.',
-                textAlign: TextAlign.center,
-                style: t.textTheme.titleMedium
-                    ?.copyWith(color: t.colorScheme.onSurfaceVariant),
-              ),
-              const Spacer(flex: 3),
-              if (!configured)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Text(
-                        "Sign-in isn't configured in this build yet. Add the "
-                        'Firebase config to android/app/google-services.json — '
-                        'see SHIP.md § Sign-in.',
-                        style: t.textTheme.bodySmall,
+      backgroundColor: Ob.ink,
+      body: NightCanvas(
+        child: SafeArea(
+          bottom: false,
+          child: Ob.measure(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(28, 24, 28, 24 + bottom),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Spacer(flex: 2),
+                  const Reveal(child: Center(child: BrandMark(size: 120))),
+                  const SizedBox(height: 26),
+                  Reveal(
+                    index: 1,
+                    child: Text(
+                      'Dreamlore',
+                      textAlign: TextAlign.center,
+                      style: Ob.serif(
+                        size: 40,
+                        weight: FontWeight.w500,
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
-                ),
-              if (_busy)
-                const SizedBox(
-                  height: 52,
-                  child: Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                  const SizedBox(height: 12),
+                  const Reveal(
+                    index: 2,
+                    child: Text(
+                      'Speak your dream when you wake.\n'
+                      'Get a reading that quotes real books.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        color: Ob.muted,
+                      ),
                     ),
                   ),
-                )
-              else
-                FilledButton.icon(
-                  onPressed: _signIn,
-                  icon: const Icon(Icons.g_mobiledata, size: 28),
-                  label: const Text('Continue with Google'),
-                ),
-              // Development escape hatch, so a build with no Firebase project
-              // or no OAuth client yet can still reach the app. Absent from
-              // release builds, where sign-in is the real gate.
-              if (kDebugMode)
-                TextButton(
-                  onPressed: _busy
-                      ? null
-                      : () async {
-                          await ref
-                              .read(signedInProvider.notifier)
-                              .continueWithoutAccount();
-                          if (!mounted) return;
-                          ref.read(appGateProvider.notifier).recompute();
-                        },
-                  child: const Text('Skip for now (debug builds only)'),
-                ),
-              const SizedBox(height: 20),
-              Text(
-                'Your dream journal is stored on this device. Signing in only '
-                'carries your subscription across devices.',
-                textAlign: TextAlign.center,
-                style: t.textTheme.bodySmall
-                    ?.copyWith(color: t.colorScheme.onSurfaceVariant),
+                  const Spacer(flex: 3),
+                  if (!configured)
+                    Reveal(
+                      index: 3,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: const InfoCard(
+                          icon: Icons.info_outline,
+                          title: "Sign-in isn't configured in this build",
+                          body:
+                              'Add the Firebase config — see SHIP.md § Sign-in.',
+                        ),
+                      ),
+                    ),
+                  Reveal(
+                    index: 4,
+                    child: GoogleSignInButton(busy: _busy, onPressed: _signIn),
+                  ),
+                  const SizedBox(height: 8),
+                  const Reveal(
+                    index: 4,
+                    child: Text(
+                      'One tap. Your journal stays on this phone.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12.5, color: Ob.muted),
+                    ),
+                  ),
+                  // Development escape hatch, so a build with no Firebase
+                  // project or no OAuth client yet can still reach the app.
+                  // Absent from release builds, where sign-in is the real gate.
+                  if (kDebugMode)
+                    TextButton(
+                      onPressed: _busy ? null : _skip,
+                      child: const Text(
+                        'Skip for now (debug builds only)',
+                        style: TextStyle(color: Ob.muted),
+                      ),
+                    ),
+                  const SizedBox(height: 18),
+                  const Reveal(
+                    index: 5,
+                    child: Text(
+                      'Signing in only carries your subscription across '
+                      'devices. Your dreams never leave this phone.\n'
+                      'By continuing you agree to the Terms of Use and '
+                      'Privacy Policy.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        height: 1.45,
+                        color: Ob.muted,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                'By continuing you agree to the Terms of Use and Privacy Policy.',
-                textAlign: TextAlign.center,
-                style: t.textTheme.labelSmall
-                    ?.copyWith(color: t.colorScheme.onSurfaceVariant),
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -30,7 +30,11 @@ class PlusUpsellSheet extends StatelessWidget {
     final t = Theme.of(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          24, 4, 24, 24 + MediaQuery.paddingOf(context).bottom),
+        24,
+        4,
+        24,
+        24 + MediaQuery.paddingOf(context).bottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -42,8 +46,9 @@ class PlusUpsellSheet extends StatelessWidget {
           Text(
             'Plus turns each dream into a picture — painted from your own '
             'words, saved with the entry, yours to keep.',
-            style: t.textTheme.bodyMedium
-                ?.copyWith(color: t.colorScheme.onSurfaceVariant),
+            style: t.textTheme.bodyMedium?.copyWith(
+              color: t.colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16),
           _check(t, 'A picture of every dream you log'),
@@ -69,15 +74,15 @@ class PlusUpsellSheet extends StatelessWidget {
   }
 
   Widget _check(ThemeData t, String s) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Row(
-          children: [
-            Icon(Icons.check_circle, size: 18, color: t.colorScheme.primary),
-            const SizedBox(width: 10),
-            Expanded(child: Text(s, style: t.textTheme.bodyMedium)),
-          ],
-        ),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 5),
+    child: Row(
+      children: [
+        Icon(Icons.check_circle, size: 18, color: t.colorScheme.primary),
+        const SizedBox(width: 10),
+        Expanded(child: Text(s, style: t.textTheme.bodyMedium)),
+      ],
+    ),
+  );
 }
 
 /// A dream-coloured painting you can't quite make out, with a lock resting on
@@ -91,11 +96,13 @@ class _BlurredPreview extends StatefulWidget {
 class _BlurredPreviewState extends State<_BlurredPreview>
     with TickerProviderStateMixin {
   late final _enter = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 520))
-    ..forward();
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  )..forward();
   late final _pulse = AnimationController(
-      vsync: this, duration: const Duration(seconds: 3))
-    ..repeat(reverse: true);
+    vsync: this,
+    duration: const Duration(seconds: 3),
+  )..repeat(reverse: true);
 
   @override
   void dispose() {
@@ -119,8 +126,9 @@ class _BlurredPreviewState extends State<_BlurredPreview>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: t.colorScheme.primary
-                      .withValues(alpha: 0.25 + 0.2 * _pulse.value),
+                  color: t.colorScheme.primary.withValues(
+                    alpha: 0.25 + 0.2 * _pulse.value,
+                  ),
                   blurRadius: 28 + 12 * _pulse.value,
                   spreadRadius: 2,
                 ),
@@ -152,8 +160,10 @@ class _BlurredPreviewState extends State<_BlurredPreview>
                         shape: BoxShape.circle,
                         color: t.colorScheme.surface.withValues(alpha: 0.75),
                       ),
-                      child: Icon(Icons.lock_outline,
-                          color: t.colorScheme.onSurface),
+                      child: Icon(
+                        Icons.lock_outline,
+                        color: t.colorScheme.onSurface,
+                      ),
                     ),
                   ),
                   Positioned(
@@ -161,17 +171,21 @@ class _BlurredPreviewState extends State<_BlurredPreview>
                     bottom: 10,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: t.colorScheme.primary,
                         borderRadius: BorderRadius.circular(100),
                       ),
-                      child: Text('PLUS',
-                          style: t.textTheme.labelSmall?.copyWith(
-                            color: t.colorScheme.onPrimary,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1,
-                          )),
+                      child: Text(
+                        'PLUS',
+                        style: t.textTheme.labelSmall?.copyWith(
+                          color: t.colorScheme.onPrimary,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -198,34 +212,46 @@ class _DreamPainter extends CustomPainter {
       ).createShader(Offset.zero & s);
     canvas.drawRect(Offset.zero & s, sky);
     // moon
-    canvas.drawCircle(Offset(s.width * 0.72, s.height * 0.28), s.height * 0.16,
-        Paint()..color = const Color(0xFFF3E9C6));
+    canvas.drawCircle(
+      Offset(s.width * 0.72, s.height * 0.28),
+      s.height * 0.16,
+      Paint()..color = const Color(0xFFF3E9C6),
+    );
     // water
     canvas.drawRect(
-        Rect.fromLTWH(0, s.height * 0.62, s.width, s.height * 0.38),
-        Paint()..color = c.tertiary.withValues(alpha: 0.55));
+      Rect.fromLTWH(0, s.height * 0.62, s.width, s.height * 0.38),
+      Paint()..color = c.tertiary.withValues(alpha: 0.55),
+    );
     // hills
     final hill = Path()
       ..moveTo(0, s.height * 0.66)
-      ..quadraticBezierTo(s.width * 0.3, s.height * 0.42, s.width * 0.55, s.height * 0.62)
+      ..quadraticBezierTo(
+        s.width * 0.3,
+        s.height * 0.42,
+        s.width * 0.55,
+        s.height * 0.62,
+      )
       ..lineTo(0, s.height * 0.62)
       ..close();
     canvas.drawPath(hill, Paint()..color = const Color(0xFF2A2757));
     // figure
     canvas.drawOval(
-        Rect.fromCenter(
-            center: Offset(s.width * 0.42, s.height * 0.66),
-            width: s.height * 0.1,
-            height: s.height * 0.3),
-        Paint()..color = const Color(0xFF15142B));
+      Rect.fromCenter(
+        center: Offset(s.width * 0.42, s.height * 0.66),
+        width: s.height * 0.1,
+        height: s.height * 0.3,
+      ),
+      Paint()..color = const Color(0xFF15142B),
+    );
     // stars
     final star = Paint()..color = Colors.white.withValues(alpha: 0.8);
     final r = math.Random(7);
     for (var i = 0; i < 18; i++) {
       canvas.drawCircle(
-          Offset(r.nextDouble() * s.width, r.nextDouble() * s.height * 0.5),
-          1.2 + r.nextDouble() * 1.4,
-          star);
+        Offset(r.nextDouble() * s.width, r.nextDouble() * s.height * 0.5),
+        1.2 + r.nextDouble() * 1.4,
+        star,
+      );
     }
   }
 

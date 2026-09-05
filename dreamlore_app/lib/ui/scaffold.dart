@@ -97,7 +97,11 @@ class EmptyState extends StatelessWidget {
         // When the state overflows (large text scales), its action button must
         // still scroll clear of the floating nav capsule.
         padding: EdgeInsets.fromLTRB(
-            32, 24, 32, 40 + MediaQuery.paddingOf(context).bottom),
+          32,
+          24,
+          32,
+          40 + MediaQuery.paddingOf(context).bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -122,10 +126,7 @@ class EmptyState extends StatelessWidget {
                 color: Ob.muted,
               ),
             ),
-            if (action != null) ...[
-              const SizedBox(height: 26),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 26), action!],
           ],
         ),
       ),

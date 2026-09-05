@@ -39,13 +39,12 @@ class OnboardingState {
     bool clearIntent = false,
     MicStatus? mic,
     bool? busy,
-  }) =>
-      OnboardingState(
-        page: page ?? this.page,
-        intent: clearIntent ? null : (intent ?? this.intent),
-        mic: mic ?? this.mic,
-        busy: busy ?? this.busy,
-      );
+  }) => OnboardingState(
+    page: page ?? this.page,
+    intent: clearIntent ? null : (intent ?? this.intent),
+    mic: mic ?? this.mic,
+    busy: busy ?? this.busy,
+  );
 }
 
 class OnboardingController extends Notifier<OnboardingState> {
@@ -67,7 +66,10 @@ class OnboardingController extends Notifier<OnboardingState> {
   /// must not become a trap with no way out of a choice.
   void selectIntent(DreamIntent value) {
     final clearing = state.intent == value;
-    state = state.copyWith(intent: clearing ? null : value, clearIntent: clearing);
+    state = state.copyWith(
+      intent: clearing ? null : value,
+      clearIntent: clearing,
+    );
   }
 
   /// Asks for microphone + speech recognition. Returns the resulting status so
@@ -109,5 +111,5 @@ class OnboardingController extends Notifier<OnboardingState> {
 
 final onboardingControllerProvider =
     NotifierProvider<OnboardingController, OnboardingState>(
-  OnboardingController.new,
-);
+      OnboardingController.new,
+    );

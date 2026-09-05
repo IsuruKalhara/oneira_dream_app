@@ -57,11 +57,7 @@ class StepScroll extends StatelessWidget {
 class WelcomeStep extends StatelessWidget {
   final VoidCallback onShowLegal;
   final bool active;
-  const WelcomeStep({
-    super.key,
-    required this.onShowLegal,
-    this.active = true,
-  });
+  const WelcomeStep({super.key, required this.onShowLegal, this.active = true});
 
   @override
   Widget build(BuildContext context) {
@@ -69,11 +65,11 @@ class WelcomeStep extends StatelessWidget {
     return StepScroll(
       active: active,
       children: [
-        const BigTitle('Your dreams, read\nagainst real books'),
+        const BigTitle('Tell your dream.\nWe read the books.'),
         const SizedBox(height: 12),
         const Sub(
-          'Speak a dream when you wake. Get a reading that '
-          'quotes its sources — not a guess.',
+          'Say it when you wake. We look it up in real dream books '
+          'and show you the lines.',
         ),
         const SizedBox(height: 26),
         BentoGrid(
@@ -87,7 +83,10 @@ class WelcomeStep extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.only(top: 22),
                 child: Orb(
-                    size: 66, color: primary, icon: Icons.mic_none_rounded),
+                  size: 66,
+                  color: primary,
+                  icon: Icons.mic_none_rounded,
+                ),
               ),
             ),
           ),
@@ -97,7 +96,9 @@ class WelcomeStep extends StatelessWidget {
             semanticsLabel:
                 'Night after night. Recurring symbols surface over time.',
             label: const PillLabel(
-                icon: Icons.nightlight_round, text: 'Night after night'),
+              icon: Icons.nightlight_round,
+              text: 'Recurring',
+            ),
             labelAlignment: Alignment.bottomLeft,
             child: const Padding(
               padding: EdgeInsets.fromLTRB(10, 12, 10, 46),
@@ -110,7 +111,9 @@ class WelcomeStep extends StatelessWidget {
             semanticsLabel:
                 'Three public-domain books: Freud twice, and Miller.',
             label: const PillLabel(
-                icon: Icons.menu_book_outlined, text: 'Three books'),
+              icon: Icons.menu_book_outlined,
+              text: 'Three books',
+            ),
             labelAlignment: Alignment.bottomLeft,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 46),
@@ -152,8 +155,7 @@ class WelcomeStep extends StatelessWidget {
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.only(top: 22),
-                child: Orb(
-                    size: 66, color: primary, icon: Icons.lock_outline),
+                child: Orb(size: 66, color: primary, icon: Icons.lock_outline),
               ),
             ),
           ),
@@ -174,8 +176,10 @@ class WelcomeStep extends StatelessWidget {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('Privacy Policy · Terms of Use',
-                style: TextStyle(fontSize: 12.5)),
+            child: const Text(
+              'Privacy Policy · Terms of Use',
+              style: TextStyle(fontSize: 12.5),
+            ),
           ),
         ),
       ],
@@ -233,8 +237,10 @@ class IntentStep extends StatelessWidget {
           ),
           child: const Column(
             children: [
-              Text('If you’re not sure',
-                  style: TextStyle(fontSize: 13.5, color: Ob.muted)),
+              Text(
+                'If you’re not sure',
+                style: TextStyle(fontSize: 13.5, color: Ob.muted),
+              ),
               SizedBox(height: 5),
               Text(
                 'Skip it — you can pick later in Settings',
@@ -260,12 +266,16 @@ class IntentStep extends StatelessWidget {
 /// Mirrors the retrieval corpus. Keep in sync with `dreamlore/src/sources.mjs`
 /// and the library named in `dreamlore/src/prompt.mjs`.
 const _library = <({String title, String author, String year})>[
-  (title: 'The Interpretation of Dreams', author: 'Sigmund Freud', year: '1899'),
+  (
+    title: 'The Interpretation of Dreams',
+    author: 'Sigmund Freud',
+    year: '1899',
+  ),
   (title: 'Dream Psychology', author: 'Sigmund Freud', year: '1920'),
   (
     title: 'Ten Thousand Dreams Interpreted',
     author: 'Gustavus Hindman Miller',
-    year: '1901'
+    year: '1901',
   ),
 ];
 
@@ -279,11 +289,11 @@ class SourcesStep extends StatelessWidget {
     return StepScroll(
       active: active,
       children: [
-        const BigTitle('We show\nour sources'),
+        const BigTitle('Real books,\nreal quotes'),
         const SizedBox(height: 12),
         const Sub(
-          'Most dream apps invent an answer that sounds plausible. '
-          'Dreamlore reads from three public-domain books and quotes them directly.',
+          'Most dream apps make up an answer. Dreamlore reads three '
+          'classic dream books and shows you the exact lines.',
         ),
         const SizedBox(height: 26),
         for (final b in _library)
@@ -309,9 +319,10 @@ class SourcesStep extends StatelessWidget {
                       color: primary.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(13),
                     ),
-                    child: Text('“',
-                        style: Ob.serif(
-                            size: 30, height: 1.9, color: primary)),
+                    child: Text(
+                      '“',
+                      style: Ob.serif(size: 30, height: 1.9, color: primary),
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -321,15 +332,18 @@ class SourcesStep extends StatelessWidget {
                         Text(
                           b.title,
                           style: Ob.serif(
-                              size: 16.5,
-                              style: FontStyle.italic,
-                              height: 1.25),
+                            size: 16.5,
+                            style: FontStyle.italic,
+                            height: 1.25,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           '${b.author} · ${b.year}',
                           style: const TextStyle(
-                              fontSize: 12.5, color: Ob.muted),
+                            fontSize: 12.5,
+                            color: Ob.muted,
+                          ),
                         ),
                       ],
                     ),
@@ -342,7 +356,8 @@ class SourcesStep extends StatelessWidget {
         const InfoCard(
           icon: Icons.balance_outlined,
           title: 'And when the books have nothing to say',
-          body: 'Dreamlore tells you so plainly, instead of forcing '
+          body:
+              'Dreamlore tells you so plainly, instead of forcing '
               'an irrelevant quote.',
         ),
       ],
@@ -371,13 +386,15 @@ class PrivacyStep extends StatelessWidget {
         const InfoCard(
           icon: Icons.graphic_eq,
           title: 'Your voice never leaves this phone',
-          body: 'Speech becomes text on this device as you talk. No audio file '
+          body:
+              'Speech becomes text on this device as you talk. No audio file '
               'is created, saved, or uploaded.',
         ),
         const InfoCard(
           icon: Icons.lock_outline,
           title: 'Your journal stays here',
-          body: 'Entries live in this app, on this device. There is no cloud '
+          body:
+              'Entries live in this app, on this device. There is no cloud '
               'copy and no way for us to read them.',
         ),
         // Being straight about what does leave is both the honest answer and
@@ -386,14 +403,16 @@ class PrivacyStep extends StatelessWidget {
           icon: Icons.north_east,
           tint: Ob.muted,
           title: 'What does leave, once',
-          body: 'The text of a dream is sent at the moment you ask for a '
+          body:
+              'The text of a dream is sent at the moment you ask for a '
               'reading, so it can be interpreted. It is not stored afterwards.',
         ),
         InfoCard(
           icon: Icons.delete_outline,
           tint: t.colorScheme.error,
           title: 'Erase everything, anytime',
-          body: 'Settings → Clear all dreams removes every entry from this '
+          body:
+              'Settings → Clear all dreams removes every entry from this '
               'device, permanently.',
         ),
       ],
@@ -425,86 +444,94 @@ class MicStep extends StatelessWidget {
       active: active,
       children: switch (status) {
         MicStatus.denied => [
-            Center(
-                child: Orb(
-                    size: 108,
-                    color: Ob.muted,
-                    icon: Icons.keyboard_alt_outlined)),
-            const SizedBox(height: 30),
-            const BigTitle('No problem —\nyou can type'),
-            const SizedBox(height: 12),
-            const Sub(
-              'Dreamlore works exactly the same way typed. Every reading, symbol '
-              'and quote is identical.',
-            ),
-            const SizedBox(height: 26),
-            const InfoCard(
+          Center(
+            child: Orb(
+              size: 108,
+              color: Ob.muted,
               icon: Icons.keyboard_alt_outlined,
-              title: 'Type on the Record tab',
-              body: 'The text field is always there, with or without the '
-                  'microphone.',
             ),
-            InfoCard(
-              icon: Icons.settings_outlined,
-              tint: Ob.muted,
-              title: 'Change your mind later',
-              body: 'Turn the microphone on any time in your device settings.',
+          ),
+          const SizedBox(height: 30),
+          const BigTitle('No problem —\nyou can type'),
+          const SizedBox(height: 12),
+          const Sub(
+            'Dreamlore works exactly the same way typed. Every reading, symbol '
+            'and quote is identical.',
+          ),
+          const SizedBox(height: 26),
+          const InfoCard(
+            icon: Icons.keyboard_alt_outlined,
+            title: 'Type on the Record tab',
+            body:
+                'The text field is always there, with or without the '
+                'microphone.',
+          ),
+          InfoCard(
+            icon: Icons.settings_outlined,
+            tint: Ob.muted,
+            title: 'Change your mind later',
+            body: 'Turn the microphone on any time in your device settings.',
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton(
+              onPressed: onOpenSettings,
+              child: const Text('Open device settings'),
             ),
-            const SizedBox(height: 4),
-            Center(
-              child: TextButton(
-                onPressed: onOpenSettings,
-                child: const Text('Open device settings'),
-              ),
-            ),
-          ],
+          ),
+        ],
         MicStatus.granted => [
-            Center(
-                child: Orb(
-                    size: 108,
-                    color: primary,
-                    icon: Icons.check_rounded,
-                    lit: true)),
-            const SizedBox(height: 30),
-            const BigTitle('You’re all set'),
-            const SizedBox(height: 12),
-            const Sub(
-              'Tomorrow morning, open Dreamlore, tap the microphone, and say '
-              'whatever you remember — even if it barely makes sense.',
+          Center(
+            child: Orb(
+              size: 108,
+              color: primary,
+              icon: Icons.check_rounded,
+              lit: true,
             ),
-            const SizedBox(height: 26),
-            const InfoCard(
-              icon: Icons.lock_outline,
-              title: 'Nothing is recorded',
-              body: 'Speech becomes text as you talk, and the audio is '
-                  'discarded.',
-            ),
-          ],
+          ),
+          const SizedBox(height: 30),
+          const BigTitle('You’re all set'),
+          const SizedBox(height: 12),
+          const Sub(
+            'Tomorrow morning, open Dreamlore, tap the microphone, and say '
+            'whatever you remember — even if it barely makes sense.',
+          ),
+          const SizedBox(height: 26),
+          const InfoCard(
+            icon: Icons.lock_outline,
+            title: 'Nothing is recorded',
+            body:
+                'Speech becomes text as you talk, and the audio is '
+                'discarded.',
+          ),
+        ],
         _ => [
-            Center(
-                child: Orb(
-                    size: 108, color: primary, icon: Icons.mic_none_rounded)),
-            const SizedBox(height: 30),
-            const BigTitle('One thing\nbefore we start'),
-            const SizedBox(height: 12),
-            const Sub(
-              'At 6am, typing is the last thing you want to do. Speaking works '
-              'far better — but only if you let Dreamlore listen.',
-            ),
-            const SizedBox(height: 26),
-            const InfoCard(
-              icon: Icons.schedule,
-              title: 'Only while you hold a recording',
-              body: 'Never in the background, never while you sleep. '
-                  'You start and stop it.',
-            ),
-            const InfoCard(
-              icon: Icons.lock_outline,
-              title: 'Nothing is recorded',
-              body: 'Your speech becomes text on this device as you talk. No '
-                  'audio file is created, saved, or uploaded.',
-            ),
-          ],
+          Center(
+            child: Orb(size: 108, color: primary, icon: Icons.mic_none_rounded),
+          ),
+          const SizedBox(height: 30),
+          const BigTitle('One thing\nbefore we start'),
+          const SizedBox(height: 12),
+          const Sub(
+            'At 6am, typing is the last thing you want to do. Speaking works '
+            'far better — but only if you let Dreamlore listen.',
+          ),
+          const SizedBox(height: 26),
+          const InfoCard(
+            icon: Icons.schedule,
+            title: 'Only while you hold a recording',
+            body:
+                'Never in the background, never while you sleep. '
+                'You start and stop it.',
+          ),
+          const InfoCard(
+            icon: Icons.lock_outline,
+            title: 'Nothing is recorded',
+            body:
+                'Your speech becomes text on this device as you talk. No '
+                'audio file is created, saved, or uploaded.',
+          ),
+        ],
       },
     );
   }

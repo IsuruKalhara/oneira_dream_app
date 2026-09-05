@@ -8,7 +8,9 @@ import '../shell/main_shell.dart';
 import '../../ui/cards.dart';
 import 'onboarding_controller.dart';
 import 'onboarding_steps.dart';
+import '../../ui/motion.dart';
 import '../../ui/night.dart';
+import '../../widgets/ambient_video.dart';
 
 /// Five-step first run: welcome → intent → sources → privacy → microphone.
 ///
@@ -49,8 +51,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (MediaQuery.disableAnimationsOf(context)) {
       _pages.jumpToPage(page);
     } else {
-      _pages.animateToPage(page,
-          duration: Ob.pageDuration, curve: Ob.pageCurve);
+      _pages.animateToPage(
+        page,
+        duration: Ob.pageDuration,
+        curve: Ob.pageCurve,
+      );
     }
   }
 
@@ -82,7 +87,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Privacy & Terms'),
         content: const Text(
-            'Both open in your browser. Nothing is agreed to by reading them.'),
+          'Both open in your browser. Nothing is agreed to by reading them.',
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -121,8 +127,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final moonSize = Ob.isLandscape(context)
         ? 40.0
         : Ob.isShort(context)
-            ? 52.0
-            : 68.0;
+        ? 52.0
+        : 68.0;
 
     return PopScope(
       canPop: state.page == 0,
@@ -132,43 +138,56 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: Scaffold(
         backgroundColor: Ob.ink,
         body: NightCanvas(
-          child: SafeArea(
-            child: Column(
-              children: [
-                _Header(
-                  page: state.page,
-                  total: OnboardingController.stepCount,
-                  moonSize: moonSize,
-                  onBack: ctl.back,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // The night over the lake, alive behind the first page only —
+              // a welcome, not wallpaper for the questions that follow.
+              AnimatedOpacity(
+                opacity: state.page == 0 ? 1 : 0,
+                duration: Motion.slow,
+                curve: Motion.curve,
+                child: const AmbientVideo(asset: 'assets/video/onboarding.mp4'),
+              ),
+              SafeArea(
+                child: Column(
+                  children: [
+                    _Header(
+                      page: state.page,
+                      total: OnboardingController.stepCount,
+                      moonSize: moonSize,
+                      onBack: ctl.back,
+                    ),
+                    Expanded(
+                      child: PageView(
+                        controller: _pages,
+                        physics: const ClampingScrollPhysics(),
+                        onPageChanged: ctl.goTo,
+                        children: [
+                          WelcomeStep(
+                            onShowLegal: _showLegal,
+                            active: state.page == 0,
+                          ),
+                          IntentStep(
+                            selected: state.intent,
+                            onSelect: ctl.selectIntent,
+                            active: state.page == 1,
+                          ),
+                          SourcesStep(active: state.page == 2),
+                          PrivacyStep(active: state.page == 3),
+                          MicStep(
+                            status: state.mic,
+                            onOpenSettings: _openSettings,
+                            active: state.page == 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                    _Footer(state: state, ctl: ctl, onFinish: _finish),
+                  ],
                 ),
-                Expanded(
-                  child: PageView(
-                    controller: _pages,
-                    physics: const ClampingScrollPhysics(),
-                    onPageChanged: ctl.goTo,
-                    children: [
-                      WelcomeStep(
-                        onShowLegal: _showLegal,
-                        active: state.page == 0,
-                      ),
-                      IntentStep(
-                        selected: state.intent,
-                        onSelect: ctl.selectIntent,
-                        active: state.page == 1,
-                      ),
-                      SourcesStep(active: state.page == 2),
-                      PrivacyStep(active: state.page == 3),
-                      MicStep(
-                        status: state.mic,
-                        onOpenSettings: _openSettings,
-                        active: state.page == 4,
-                      ),
-                    ],
-                  ),
-                ),
-                _Footer(state: state, ctl: ctl, onFinish: _finish),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -253,27 +272,28 @@ class _Footer extends StatelessWidget {
     }
     return switch (state.mic) {
       MicStatus.granted => (
-          label: 'Start journaling',
-          sub: 'Takes you into the app',
-          onPressed: () => onFinish(),
-        ),
+        label: 'Start journaling',
+        sub: 'Takes you into the app',
+        onPressed: () => onFinish(),
+      ),
       MicStatus.denied => (
-          label: 'Continue',
-          sub: 'You can type your dreams instead',
-          onPressed: () => onFinish(),
-        ),
+        label: 'Continue',
+        sub: 'You can type your dreams instead',
+        onPressed: () => onFinish(),
+      ),
       _ => (
-          label: 'Allow microphone',
-          sub: 'You can change this later',
-          onPressed: state.busy ? null : () => ctl.requestMic(),
-        ),
+        label: 'Allow microphone',
+        sub: 'You can change this later',
+        onPressed: state.busy ? null : () => ctl.requestMic(),
+      ),
     };
   }
 
   @override
   Widget build(BuildContext context) {
     final p = _primary();
-    final micUndecided = _isMicStep &&
+    final micUndecided =
+        _isMicStep &&
         (state.mic == MicStatus.unknown || state.mic == MicStatus.skipped);
 
     final primary = PrimaryPill(
@@ -315,8 +335,10 @@ class _Footer extends StatelessWidget {
                         ctl.skipMic();
                         onFinish();
                       },
-                child: const Text("I'll type instead",
-                    style: TextStyle(color: Ob.muted)),
+                child: const Text(
+                  "I'll type instead",
+                  style: TextStyle(color: Ob.muted),
+                ),
               ),
           ],
         ),
