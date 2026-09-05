@@ -70,14 +70,12 @@ lockup and dissolves into the app.
 
 ## Book covers
 
-`assets/brand/book1..3.jpg` — cover art for the three library books, shown on
-the cards that fan out while a reading is being written. Art-nouveau engraved
-frames on the night ground: a closed eye with a crescent lid (*The
-Interpretation of Dreams*), a constellation profile (*Dream Psychology*), a key
-hanging from a moon (*Ten Thousand Dreams Interpreted*). Generated with Recraft
-V4.1 (`utility_vector`, brand palette, 2.5 credits each) and rasterised to
-336×468 — three times the 112×156 card. Deliberately textless, so the title
-sits over the art in Newsreader and stays legible at card size.
+The three library books shown while a reading is written are **drawn, not
+photographed**: `_CoverPainter` in the record screen paints a double gilt
+rule and one motif each — a closed eye under a crescent, a head in profile as
+joined stars, a key hanging from a moon. Vector, so they stay crisp at any
+size, tint from the palette, and ship no bytes. Generated cover images were
+tried first and cut: raster art at 112×156 read as cheap.
 
 ## Motion
 

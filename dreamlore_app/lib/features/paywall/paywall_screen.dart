@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/providers.dart';
+import '../../ui/night.dart';
 import '../../services/subscription_service.dart';
 import 'purchase_success_screen.dart';
 
@@ -91,6 +92,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       if (pct >= 5 && pct <= 90) save = pct.round();
     }
     return (perMonth: perMonth, savePercent: save);
+  }
+
+  /// The yearly plan as a daily figure — "less than 9c a day" is the frame
+  /// that makes an annual price feel small, and it is the one number every
+  /// high-converting paywall in the category shows. Honest arithmetic on the
+  /// store's own price, never a hardcoded claim.
+  String? get _yearlyPerDay {
+    final y = ref
+        .read(subscriptionServiceProvider)
+        .priceParts(BillingPeriod.yearly);
+    if (y == null || y.amount <= 0) return null;
+    final perDay = y.amount / 365;
+    return '${y.symbol}${perDay.toStringAsFixed(2)}';
   }
 
   /// Nothing to buy until the selected plan has a price. It is null while the
@@ -215,11 +229,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     if (!_storeAvailable) return 'Available on Google Play';
     if (_price(_period) == null) return "This plan isn't available yet";
     if (_period == BillingPeriod.monthly) {
-      return 'Continue · ${_price(_period)}/mo';
+      return 'Start my plan · ${_price(_period)}/mo';
     }
     return _hasTrial
-        ? 'Start $_trialDays-day free trial'
-        : 'Continue · ${_price(_period)}/yr';
+        ? 'Try $_trialDays days free'
+        : 'Start my plan · ${_price(_period)}/yr';
   }
 
   Future<bool?> _confirmSheet(BillingPeriod period) {
@@ -282,179 +296,216 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final math = _yearlyMath;
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 12, 0),
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: widget.firstRun ? 'Not now' : 'Close',
-                    onPressed: _busy ? null : _dismiss,
-                    icon: const Icon(Icons.close),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: _busy ? null : _restore,
-                    child: const Text('Restore'),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                children: [
-                  Text(
-                    'Dream more,\nread deeper.',
-                    style: t.textTheme.displaySmall?.copyWith(height: 1.1),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Recording, transcription and your journal stay free. Plus '
-                    'buys room for more readings, and longer ones.',
-                    style: t.textTheme.bodyMedium?.copyWith(
-                      color: t.colorScheme.onSurfaceVariant,
+      backgroundColor: Ob.ink,
+      body: NightCanvas(
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 12, 0),
+                child: Row(
+                  children: [
+                    // Present from the first frame — both stores require a way
+                    // out — but quiet, so it never competes with the offer.
+                    IconButton(
+                      tooltip: widget.firstRun ? 'Not now' : 'Close',
+                      onPressed: _busy ? null : _dismiss,
+                      icon: const Icon(Icons.close, size: 20),
+                      color: Ob.muted.withValues(alpha: 0.7),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  _benefit(
-                    t,
-                    Icons.auto_awesome,
-                    'More interpretations every day and every month',
-                  ),
-                  _benefit(
-                    t,
-                    Icons.psychology_alt,
-                    'Deeper readings, with more of the source behind them',
-                  ),
-                  _benefit(
-                    t,
-                    Icons.insights,
-                    'Full symbol-trend insights across your whole journal',
-                  ),
-                  _benefit(
-                    t,
-                    Icons.favorite_border,
-                    'Supports an independent, ad-free app',
-                  ),
-                  const SizedBox(height: 28),
-                  _PlanCard(
-                    title: 'Yearly',
-                    tagline: math == null
-                        ? (_price(BillingPeriod.yearly) == null &&
-                                  !_loadingPrices
-                              ? '≈ ${Config.referenceYearlyPerMonth} a month, billed yearly'
-                              : 'Best value')
-                        : '≈ ${math.perMonth} a month, billed yearly',
-                    badge: (math?.savePercent ?? 0) > 0
-                        ? 'Save ${math!.savePercent}%'
-                        : 'Best value',
-                    ribbon: _hasTrial ? '$_trialDays-day free trial' : null,
-                    price:
-                        _price(BillingPeriod.yearly) ??
-                        (_loadingPrices
-                            ? null
-                            : 'from ${Config.referenceYearlyPrice}'),
-                    priceSuffix: '/yr',
-                    loadingPrice: _loadingPrices,
-                    selected: _period == BillingPeriod.yearly,
-                    onTap: _busy
-                        ? null
-                        : () => setState(() => _period = BillingPeriod.yearly),
-                  ),
-                  const SizedBox(height: 12),
-                  _PlanCard(
-                    title: 'Monthly',
-                    tagline: 'Cancel any time',
-                    price:
-                        _price(BillingPeriod.monthly) ??
-                        (_loadingPrices
-                            ? null
-                            : 'from ${Config.referenceMonthlyPrice}'),
-                    priceSuffix: '/mo',
-                    loadingPrice: _loadingPrices,
-                    selected: _period == BillingPeriod.monthly,
-                    onTap: _busy
-                        ? null
-                        : () => setState(() => _period = BillingPeriod.monthly),
-                  ),
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOutCubic,
-                    alignment: Alignment.topCenter,
-                    child: _period == BillingPeriod.yearly && _hasTrial
-                        ? Padding(
-                            padding: const EdgeInsets.only(top: 20),
-                            child: _TrialTimeline(
-                              trialDays: _trialDays!,
-                              yearlyPrice: _price(BillingPeriod.yearly),
-                            ),
-                          )
-                        : const SizedBox(width: double.infinity),
-                  ),
-                  if (!_loadingPrices && !_storeAvailable) ...[
-                    const SizedBox(height: 16),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _busy ? null : _restore,
+                      style: TextButton.styleFrom(foregroundColor: Ob.muted),
+                      child: const Text('Restore'),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                  children: [
                     Text(
-                      "Plans can't be loaded right now. Check your connection, "
-                      "and that you're signed in to Google Play.",
-                      style: t.textTheme.bodySmall?.copyWith(
+                      _hasTrial
+                          ? 'See your dreams\nfree for $_trialDays days.'
+                          : 'See your dreams,\nnot just read them.',
+                      textAlign: TextAlign.center,
+                      style: Ob.serif(size: 34, height: 1.15),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'A painting of every dream you log, more readings a day, '
+                      'and the full picture of what keeps coming back.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        height: 1.5,
+                        color: Ob.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    _benefit(
+                      t,
+                      Icons.image_outlined,
+                      'A painting of every dream, yours to keep and share',
+                    ),
+                    _benefit(
+                      t,
+                      Icons.auto_awesome,
+                      'More interpretations every day and every month',
+                    ),
+                    _benefit(
+                      t,
+                      Icons.psychology_alt,
+                      'Deeper readings, with more of the source behind them',
+                    ),
+                    _benefit(
+                      t,
+                      Icons.insights,
+                      'Full symbol-trend insights across your whole journal',
+                    ),
+                    _benefit(
+                      t,
+                      Icons.favorite_border,
+                      'Supports an independent, ad-free app',
+                    ),
+                    const SizedBox(height: 28),
+                    _PlanCard(
+                      title: 'Yearly',
+                      tagline: math == null
+                          ? (_price(BillingPeriod.yearly) == null &&
+                                    !_loadingPrices
+                                ? '≈ ${Config.referenceYearlyPerMonth} a month, billed yearly'
+                                : 'Best value')
+                          : (_yearlyPerDay != null
+                                ? 'Just $_yearlyPerDay a day · ${math.perMonth} a month'
+                                : '≈ ${math.perMonth} a month, billed yearly'),
+                      badge: (math?.savePercent ?? 0) > 0
+                          ? 'Save ${math!.savePercent}%'
+                          : 'Best value',
+                      ribbon: _hasTrial ? '$_trialDays-day free trial' : null,
+                      price:
+                          _price(BillingPeriod.yearly) ??
+                          (_loadingPrices
+                              ? null
+                              : 'from ${Config.referenceYearlyPrice}'),
+                      priceSuffix: '/yr',
+                      loadingPrice: _loadingPrices,
+                      selected: _period == BillingPeriod.yearly,
+                      onTap: _busy
+                          ? null
+                          : () =>
+                                setState(() => _period = BillingPeriod.yearly),
+                    ),
+                    const SizedBox(height: 12),
+                    _PlanCard(
+                      title: 'Monthly',
+                      tagline: 'Cancel any time',
+                      price:
+                          _price(BillingPeriod.monthly) ??
+                          (_loadingPrices
+                              ? null
+                              : 'from ${Config.referenceMonthlyPrice}'),
+                      priceSuffix: '/mo',
+                      loadingPrice: _loadingPrices,
+                      selected: _period == BillingPeriod.monthly,
+                      onTap: _busy
+                          ? null
+                          : () =>
+                                setState(() => _period = BillingPeriod.monthly),
+                    ),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                      alignment: Alignment.topCenter,
+                      child: _period == BillingPeriod.yearly && _hasTrial
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 20),
+                              child: _TrialTimeline(
+                                trialDays: _trialDays!,
+                                yearlyPrice: _price(BillingPeriod.yearly),
+                              ),
+                            )
+                          : const SizedBox(width: double.infinity),
+                    ),
+                    if (!_loadingPrices && !_storeAvailable) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        "Plans can't be loaded right now. Check your connection, "
+                        "and that you're signed in to Google Play.",
+                        style: t.textTheme.bodySmall?.copyWith(
+                          color: t.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+                child: Column(
+                  children: [
+                    if (_busy)
+                      const SizedBox(
+                        height: 52,
+                        child: Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      )
+                    else
+                      FilledButton(
+                        onPressed: isPaid || !_canBuy ? null : _continue,
+                        child: Text(_ctaLabel(isPaid)),
+                      ),
+                    const SizedBox(height: 8),
+                    // Declining stays possible and findable — both stores
+                    // require it — but it is a quiet line rather than a second
+                    // button competing with the offer.
+                    GestureDetector(
+                      onTap: _busy ? null : _dismiss,
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          widget.firstRun
+                              ? 'Continue on the free plan'
+                              : 'Not now',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Ob.muted.withValues(alpha: 0.85),
+                            decoration: TextDecoration.underline,
+                            decorationColor: Ob.muted.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _period == BillingPeriod.monthly
+                          ? 'Renews monthly until cancelled. Cancel any time in '
+                                'Google Play. Terms & Privacy apply.'
+                          : _hasTrial
+                          ? 'Free for $_trialDays days, then renews yearly '
+                                'until cancelled. Cancel any time in Google '
+                                'Play. Terms & Privacy apply.'
+                          : 'Renews yearly until cancelled. Cancel any time '
+                                'in Google Play. Terms & Privacy apply.',
+                      textAlign: TextAlign.center,
+                      style: t.textTheme.labelSmall?.copyWith(
                         color: t.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
-              child: Column(
-                children: [
-                  if (_busy)
-                    const SizedBox(
-                      height: 52,
-                      child: Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                    )
-                  else
-                    FilledButton(
-                      onPressed: isPaid || !_canBuy ? null : _continue,
-                      child: Text(_ctaLabel(isPaid)),
-                    ),
-                  const SizedBox(height: 6),
-                  TextButton(
-                    onPressed: _busy ? null : _dismiss,
-                    child: Text(
-                      widget.firstRun
-                          ? 'Continue with the free plan'
-                          : 'Not now',
-                    ),
-                  ),
-                  Text(
-                    _period == BillingPeriod.monthly
-                        ? 'Renews monthly until cancelled. Cancel any time in '
-                              'Google Play. Terms & Privacy apply.'
-                        : _hasTrial
-                        ? 'Free for $_trialDays days, then renews yearly '
-                              'until cancelled. Cancel any time in Google '
-                              'Play. Terms & Privacy apply.'
-                        : 'Renews yearly until cancelled. Cancel any time '
-                              'in Google Play. Terms & Privacy apply.',
-                    textAlign: TextAlign.center,
-                    style: t.textTheme.labelSmall?.copyWith(
-                      color: t.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -506,8 +557,8 @@ class _PlanCard extends StatelessWidget {
     final radius = BorderRadius.circular(18);
     return Material(
       color: selected
-          ? t.colorScheme.primary.withValues(alpha: 0.10)
-          : Colors.transparent,
+          ? t.colorScheme.primary.withValues(alpha: 0.16)
+          : Colors.white.withValues(alpha: 0.04),
       borderRadius: radius,
       child: InkWell(
         onTap: onTap,
@@ -518,7 +569,7 @@ class _PlanCard extends StatelessWidget {
             border: Border.all(
               color: selected
                   ? t.colorScheme.primary
-                  : t.colorScheme.outlineVariant,
+                  : Colors.white.withValues(alpha: 0.10),
               width: selected ? 2 : 1,
             ),
           ),

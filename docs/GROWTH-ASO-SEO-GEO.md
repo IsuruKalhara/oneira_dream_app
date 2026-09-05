@@ -246,6 +246,37 @@ order of weight:
 Measure: D1 and D7 return rate by whether the reminder is on; readings per
 week; share taps per painting. Change the reminder copy before anything else.
 
+## 7d. The paywall, and why it is shaped this way
+
+Benchmarks (Sep 2026): a paywall with a free trial converts about **10.9%**
+against **3.6%** without one, so the trial is the single biggest lever and it
+leads the screen. Annual-first pricing carries a materially higher one-year
+value than monthly-first. The two big vendors disagree on hard vs soft gating
+— RevenueCat reports hard paywalls converting far better on trial-to-paid,
+Adapty reports soft paywalls converting better on view-to-payment — so
+Dreamlore takes the middle: the offer is shown once, in full, at first run,
+and declining is a quiet underlined line rather than a second button.
+
+What the screen does, and the reason for each part:
+
+| Element | Why |
+|---|---|
+| Headline leads with the trial: *"See your dreams free for 3 days"* | Risk reversal before price is ever mentioned |
+| The painting is benefit #1 | It is the thing they cannot get free, and the thing they'd show someone |
+| Yearly preselected, savings badge | Annual-first is worth more per user, and the badge justifies it |
+| **Per-day price** under the yearly card | An annual figure feels large; the same number per day feels trivial |
+| Trial timeline (today / reminder / charge date) | Removes the "I'll forget and get charged" objection, which is the top reason people refuse a trial |
+| CTA says *"Try 3 days free"*, never "Subscribe" | Benefit-driven CTAs beat generic ones |
+| Fine print under the CTA, always | Play requires it and it reduces refunds |
+| Skip is a small underlined line, always visible | Both stores require a way out; hiding it risks rejection |
+
+**Do not** add countdown timers, fake discounts, or a hidden close — they lift
+one cohort's conversion and cost the listing. Test the headline and the plan
+ordering instead; expect 3-8% per test.
+
+Sources: RevenueCat *State of Subscription Apps 2026*, Adapty *high-performing
+paywall 2026*, Apphud paywall design teardowns.
+
 ## 8. Launch order (do these in sequence)
 
 1. Play Console: products + 3-day trial offer (SHIP.md §3). Internal test.

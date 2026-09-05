@@ -4,7 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/config.dart';
 import '../../core/legal.dart';
-import '../shell/main_shell.dart';
+import '../../providers/providers.dart';
 import '../../ui/cards.dart';
 import 'onboarding_controller.dart';
 import 'onboarding_steps.dart';
@@ -60,12 +60,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    final navigator = Navigator.of(context);
     await ref.read(onboardingControllerProvider.notifier).complete();
     if (!mounted) return;
-    navigator.pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainShell()),
-    );
+    // Hand back to the gate rather than pushing the shell: the gate is what
+    // knows the paywall still owes this user one showing. Pushing MainShell
+    // here skipped it entirely on every fresh install.
+    ref.read(appGateProvider.notifier).recompute();
   }
 
   Future<void> _openSettings() async {

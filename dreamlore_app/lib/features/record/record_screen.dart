@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -561,12 +562,9 @@ class _LibrarySearch extends StatefulWidget {
 class _LibrarySearchState extends State<_LibrarySearch>
     with SingleTickerProviderStateMixin {
   static const _books = [
-    (title: 'The Interpretation\nof Dreams', cover: 'assets/brand/book1.jpg'),
-    (title: 'Dream\nPsychology', cover: 'assets/brand/book2.jpg'),
-    (
-      title: 'Ten Thousand\nDreams Interpreted',
-      cover: 'assets/brand/book3.jpg',
-    ),
+    'The Interpretation\nof Dreams',
+    'Dream\nPsychology',
+    'Ten Thousand\nDreams Interpreted',
   ];
 
   late final AnimationController _c = AnimationController(
@@ -607,8 +605,8 @@ class _LibrarySearchState extends State<_LibrarySearch>
             children: [
               for (var i = 0; i < 3; i++)
                 _BookCard(
-                  title: _books[i].title,
-                  cover: _books[i].cover,
+                  title: _books[i],
+                  motif: i,
                   angle: (i - 1) * 0.22,
                   offset: Offset((i - 1) * 78.0, i == 1 ? -14 : 0),
                   lit: i == active,
@@ -645,7 +643,9 @@ class _LibrarySearchState extends State<_LibrarySearch>
 
 class _BookCard extends StatelessWidget {
   final String title;
-  final String cover;
+
+  /// Which of the three cover motifs to draw.
+  final int motif;
   final double angle;
   final Offset offset;
   final bool lit;
@@ -653,7 +653,7 @@ class _BookCard extends StatelessWidget {
   final Color color;
   const _BookCard({
     required this.title,
-    required this.cover,
+    required this.motif,
     required this.angle,
     required this.offset,
     required this.lit,
@@ -673,11 +673,12 @@ class _BookCard extends StatelessWidget {
           width: 112,
           height: 156,
           decoration: BoxDecoration(
+            color: Ob.inkDeep,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: lit
                   ? color.withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: 0.10),
+                  : Colors.white.withValues(alpha: 0.12),
             ),
             boxShadow: [
               BoxShadow(
@@ -697,17 +698,11 @@ class _BookCard extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // The cover, dimmed until this book is the one being read.
-                AnimatedOpacity(
-                  opacity: lit ? 1 : 0.45,
-                  duration: const Duration(milliseconds: 500),
-                  child: Image.asset(
-                    cover,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => ColoredBox(color: Ob.inkDeep),
-                  ),
+                // The cover, drawn: a gilt rule frame and one motif per book.
+                // Vector, so it stays crisp at any size and ships no bytes.
+                CustomPaint(
+                  painter: _CoverPainter(motif: motif, lit: lit, glow: glow),
                 ),
-                // The title, legible over the art.
                 Align(
                   alignment: Alignment.bottomLeft,
                   child: Container(
@@ -719,7 +714,7 @@ class _BookCard extends StatelessWidget {
                         end: Alignment.bottomCenter,
                         colors: [
                           Ob.inkDeep.withValues(alpha: 0),
-                          Ob.inkDeep.withValues(alpha: 0.92),
+                          Ob.inkDeep.withValues(alpha: 0.95),
                         ],
                       ),
                     ),
@@ -729,7 +724,7 @@ class _BookCard extends StatelessWidget {
                         size: 11,
                         style: FontStyle.italic,
                         height: 1.2,
-                        color: Ob.parchment.withValues(alpha: lit ? 1 : 0.75),
+                        color: Ob.parchment.withValues(alpha: lit ? 1 : 0.7),
                       ),
                     ),
                   ),
@@ -741,6 +736,148 @@ class _BookCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// One book cover, drawn in the app's own hand: a double gilt rule, and a
+/// motif per book — a closed eye, a constellation, a key — so the three read
+/// as three books without shipping three images.
+class _CoverPainter extends CustomPainter {
+  final int motif;
+  final bool lit;
+  final double glow;
+  const _CoverPainter({
+    required this.motif,
+    required this.lit,
+    required this.glow,
+  });
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final gilt = Ob.parchment.withValues(alpha: lit ? 0.85 : 0.4);
+    final line = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = gilt
+      ..strokeCap = StrokeCap.round;
+
+    // A faint wash so a lit cover warms rather than merely brightening.
+    canvas.drawRect(
+      Offset.zero & s,
+      Paint()
+        ..shader = ui.Gradient.linear(Offset.zero, Offset(s.width, s.height), [
+          const Color(0xFF1B1938),
+          Color.lerp(const Color(0xFF14132A), const Color(0xFF2A2557), glow)!,
+        ]),
+    );
+
+    // Double rule frame.
+    final outer = Rect.fromLTWH(7, 7, s.width - 14, s.height - 14);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(outer, const Radius.circular(4)),
+      line,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(outer.deflate(4), const Radius.circular(3)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.6
+        ..color = gilt.withValues(alpha: 0.5),
+    );
+
+    final c = Offset(s.width / 2, s.height * 0.42);
+    switch (motif) {
+      case 0:
+        _eye(canvas, c, line, gilt);
+      case 1:
+        _constellation(canvas, c, line, gilt);
+      default:
+        _key(canvas, c, line, gilt);
+    }
+    _stars(canvas, s, gilt);
+  }
+
+  /// A closed eye under a crescent.
+  void _eye(Canvas canvas, Offset c, Paint line, Color gilt) {
+    final path = Path()
+      ..moveTo(c.dx - 22, c.dy)
+      ..quadraticBezierTo(c.dx, c.dy - 18, c.dx + 22, c.dy)
+      ..quadraticBezierTo(c.dx, c.dy + 8, c.dx - 22, c.dy);
+    canvas.drawPath(path, line);
+    for (var i = -2; i <= 2; i++) {
+      final x = c.dx + i * 8.0;
+      canvas.drawLine(
+        Offset(x, c.dy + 4),
+        Offset(x + i * 1.5, c.dy + 11),
+        line,
+      );
+    }
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(c.dx, c.dy - 20), radius: 9),
+      3.6,
+      2.4,
+      false,
+      line,
+    );
+  }
+
+  /// A head in profile, as joined stars.
+  void _constellation(Canvas canvas, Offset c, Paint line, Color gilt) {
+    final pts = <Offset>[
+      Offset(c.dx - 14, c.dy + 16),
+      Offset(c.dx - 16, c.dy - 2),
+      Offset(c.dx - 6, c.dy - 16),
+      Offset(c.dx + 10, c.dy - 14),
+      Offset(c.dx + 16, c.dy + 2),
+      Offset(c.dx + 6, c.dy + 16),
+    ];
+    for (var i = 0; i < pts.length - 1; i++) {
+      canvas.drawLine(pts[i], pts[i + 1], line);
+    }
+    final dot = Paint()..color = gilt;
+    for (final p in pts) {
+      canvas.drawCircle(p, 1.8, dot);
+    }
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(c.dx + 2, c.dy), radius: 7),
+      3.9,
+      2.2,
+      false,
+      line,
+    );
+  }
+
+  /// A key hanging from a crescent.
+  void _key(Canvas canvas, Offset c, Paint line, Color gilt) {
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(c.dx, c.dy - 14), radius: 11),
+      3.5,
+      2.6,
+      false,
+      line,
+    );
+    canvas.drawLine(Offset(c.dx, c.dy - 3), Offset(c.dx, c.dy + 20), line);
+    canvas.drawCircle(Offset(c.dx, c.dy + 1), 4, line);
+    canvas.drawLine(Offset(c.dx, c.dy + 13), Offset(c.dx + 6, c.dy + 13), line);
+    canvas.drawLine(Offset(c.dx, c.dy + 18), Offset(c.dx + 4, c.dy + 18), line);
+  }
+
+  void _stars(Canvas canvas, Size s, Color gilt) {
+    final dot = Paint()..color = gilt.withValues(alpha: 0.55);
+    const spots = [
+      Offset(0.22, 0.20),
+      Offset(0.78, 0.24),
+      Offset(0.30, 0.62),
+      Offset(0.72, 0.58),
+      Offset(0.50, 0.14),
+    ];
+    for (final p in spots) {
+      canvas.drawCircle(Offset(p.dx * s.width, p.dy * s.height), 1.1, dot);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CoverPainter old) =>
+      old.lit != lit || old.glow != glow || old.motif != motif;
 }
 
 /// What the app is doing right now, one line at a time, in the same rhythm

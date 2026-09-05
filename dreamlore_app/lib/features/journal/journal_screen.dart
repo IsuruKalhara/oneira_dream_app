@@ -587,6 +587,38 @@ class _EntryCard extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // A date column, the way every long-history journal does
+                    // it: the eye runs down one edge to find a night rather
+                    // than reading every row.
+                    SizedBox(
+                      width: 42,
+                      child: Column(
+                        children: [
+                          Text(
+                            DateFormat.d().format(entry.createdAt),
+                            style: const TextStyle(
+                              fontSize: 19,
+                              height: 1,
+                              fontWeight: FontWeight.w700,
+                              color: Ob.parchment,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            DateFormat.MMM()
+                                .format(entry.createdAt)
+                                .toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              letterSpacing: 0.8,
+                              fontWeight: FontWeight.w600,
+                              color: Ob.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
