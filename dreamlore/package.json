@@ -17,7 +17,7 @@
     "build:kb": "node scripts/build-worker-kb.mjs",
     "eval": "node eval/cli.mjs",
     "test": "node --test worker/test/*.test.mjs",
-    "deploy": "npm run build:kb && cd worker && wrangler deploy"
+    "deploy": "npm run build:kb && cd worker && npx wrangler deploy"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0"

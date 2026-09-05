@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
@@ -50,6 +51,23 @@ Future<void> main() async {
     }
 
     if (firebaseReady) {
+      // App Check attests that calls really come from this app, so the API key
+      // baked into the APK is not enough on its own to hammer Firebase.
+      // Registered but NOT enforced yet: turning enforcement on in the console
+      // before real devices are seen passing would lock out every user.
+      try {
+        await FirebaseAppCheck.instance.activate(
+          providerAndroid: kDebugMode
+              ? const AndroidDebugProvider()
+              : const AndroidPlayIntegrityProvider(),
+          providerApple: kDebugMode
+              ? const AppleDebugProvider()
+              : const AppleAppAttestProvider(),
+        );
+      } catch (_) {
+        // Attestation is a hardening layer, never a gate on starting up.
+      }
+
       // Crash reporting. Off in debug, so local stack traces stay in the
       // console and development never pollutes the production crash list.
       final crashlytics = FirebaseCrashlytics.instance;
