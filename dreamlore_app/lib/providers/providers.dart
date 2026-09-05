@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/telemetry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/db/database.dart';
@@ -69,16 +71,20 @@ class SignedInController extends Notifier<bool> {
   Future<void> signInWithGoogle() async {
     await ref.read(authServiceProvider).signInWithGoogle();
     state = true;
+    unawaited(Telemetry.signedIn(method: 'google'));
+    unawaited(Telemetry.setUser(ref.read(authServiceProvider).uid));
   }
 
   Future<void> continueWithoutAccount() async {
     await ref.read(authServiceProvider).continueWithoutAccount();
     state = true;
+    unawaited(Telemetry.signedIn(method: 'none'));
   }
 
   Future<void> signOut() async {
     await ref.read(authServiceProvider).signOut();
     state = false;
+    unawaited(Telemetry.setUser(null));
   }
 
   /// Deletes the account and every dream on this device.
@@ -90,6 +96,8 @@ class SignedInController extends Notifier<bool> {
     await ref.read(dreamRepositoryProvider).clearAll();
     await ref.read(authServiceProvider).deleteAccount();
     state = false;
+    unawaited(Telemetry.accountDeleted());
+    unawaited(Telemetry.setUser(null));
   }
 
   /// Re-reads the flag after a startup reconciliation with Firebase.

@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/telemetry.dart';
 import 'core/device_id.dart';
 import 'core/theme.dart';
 import 'firebase_options.dart';
@@ -84,6 +85,11 @@ Future<void> main() async {
         return true;
       };
       await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(!kDebugMode);
+    }
+    // Telemetry stays a no-op unless Firebase actually started, so a failed
+    // init degrades to "no analytics" rather than throwing on every event.
+    Telemetry.enable(ready: firebaseReady);
+    if (firebaseReady) {
     }
 
     runApp(

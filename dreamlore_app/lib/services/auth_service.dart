@@ -153,6 +153,11 @@ class AuthService {
     }
   }
 
+  /// Firebase's own id for the signed-in user, or null. Used to tag crash
+  /// reports — it identifies a user to us across sessions without the
+  /// dashboard ever holding their email.
+  String? get uid => isConfigured ? _auth.currentUser?.uid : null;
+
   Future<void> signOut() async {
     if (isConfigured) {
       try {

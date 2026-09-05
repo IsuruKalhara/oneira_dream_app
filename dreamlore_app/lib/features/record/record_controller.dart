@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/errors.dart';
 import '../../data/api/dream_api.dart';
+import '../../core/telemetry.dart';
 import '../../data/models.dart';
 import '../../data/safety.dart';
 import '../../widgets/dream_image_card.dart';
@@ -24,7 +25,11 @@ class RecordState {
   final Interpretation? interpretation;
   final QuotaInfo? quota;
   final QuotaExceededException? quotaError;
-  final String? error;
+  /// The thrown object, not its text. `Friendly.of` classifies a DioException
+  /// by type — offline vs timeout vs 5xx — and `e.toString()` threw that away,
+  /// so every network failure surfaced as "Something went sideways" instead of
+  /// "You're offline". Widened to Object? deliberately.
+  final Object? error;
   final RecordErrorSource? errorSource;
 
   /// Set the moment the reading is saved — which is the moment it arrives.
@@ -62,7 +67,7 @@ class RecordState {
     QuotaInfo? quota,
     String? savedId,
     QuotaExceededException? quotaError, // transient: cleared unless passed
-    String? error, // transient
+    Object? error, // transient
     RecordErrorSource? errorSource, // transient: cleared unless passed
     Uint8List? imageBytes,
     DreamImageStatus? imageStatus,
@@ -143,6 +148,7 @@ class RecordController extends Notifier<RecordState> {
     }
 
     state = state.copyWith(status: RecordStatus.interpreting);
+    final started = DateTime.now();
     try {
       final res = await ref.read(dreamApiProvider).explain(text);
       final id = await _save(text, res.interpretation);
@@ -153,17 +159,26 @@ class RecordController extends Notifier<RecordState> {
         savedId: id,
       );
       ref.invalidate(quotaProvider);
+      unawaited(Telemetry.dreamInterpreted(
+        elapsedMs: DateTime.now().difference(started).inMilliseconds,
+        dreamChars: text.length,
+        tier: res.quota?.tier ?? 'free',
+      ));
       // Plus: the picture is part of the reading, not a second ask. Free: the
       // card shows the invitation, and the upsell is one tap away.
       if (ref.read(entitlementProvider)) unawaited(imagine());
     } on QuotaExceededException catch (e) {
       state = state.copyWith(status: RecordStatus.error, quotaError: e);
-    } catch (e) {
+      unawaited(Telemetry.quotaHit(period: e.reason));
+    } catch (e, st) {
       state = state.copyWith(
         status: RecordStatus.error,
-        error: e.toString(),
+        error: e,
         errorSource: RecordErrorSource.interpretation,
       );
+      // A reading that fails is invisible to the crash dashboard otherwise:
+      // the app did not crash, it just did not work.
+      unawaited(Telemetry.recordFailure(e, st, during: 'interpret'));
     }
   }
 

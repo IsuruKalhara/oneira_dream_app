@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/config.dart';
+import '../../core/telemetry.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -48,6 +49,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   void initState() {
     super.initState();
     _loadPrices();
+    // Which entry point produced the view matters more than the count: the
+    // gate after onboarding and a tap on Upgrade convert very differently.
+    Telemetry.paywallShown(from: 'paywall_screen');
   }
 
   Future<void> _loadPrices() async {
