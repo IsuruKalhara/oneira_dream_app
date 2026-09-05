@@ -215,7 +215,11 @@ class RecordController extends Notifier<RecordState> {
           .imagine(text, symbols: interp.symbols);
       final id = state.savedId;
       if (id != null) {
-        final path = await ref.read(imageStoreProvider).save(id, bytes);
+        final store = ref.read(imageStoreProvider);
+        // Filenames are unique per generation, so a repaint would otherwise
+        // leave the previous picture on disk with nothing pointing at it.
+        await store.deleteAllFor(id);
+        final path = await store.save(id, bytes);
         await ref.read(dreamRepositoryProvider).setImagePath(id, path);
       }
       state = state.copyWith(

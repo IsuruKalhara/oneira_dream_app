@@ -48,7 +48,8 @@ class _EntryDetailScreenState extends ConsumerState<EntryDetailScreen> {
           .read(dreamApiProvider)
           .imagine(e.transcript, symbols: e.symbolList);
       final store = ref.read(imageStoreProvider);
-      await store.delete(_imagePath);
+      // Clears the current file and any orphan from an interrupted repaint.
+      await store.deleteAllFor(e.id);
       final path = await store.save(e.id, bytes);
       await ref.read(dreamRepositoryProvider).setImagePath(e.id, path);
       ref.invalidate(quotaProvider);
