@@ -81,6 +81,17 @@ class SignedInController extends Notifier<bool> {
     state = false;
   }
 
+  /// Deletes the account and every dream on this device.
+  ///
+  /// Local data goes first on purpose: if the account deletion then fails the
+  /// user can retry, whereas the reverse order could destroy the journal and
+  /// leave the account alive with no signed-in way back to it.
+  Future<void> deleteAccount() async {
+    await ref.read(dreamRepositoryProvider).clearAll();
+    await ref.read(authServiceProvider).deleteAccount();
+    state = false;
+  }
+
   /// Re-reads the flag after a startup reconciliation with Firebase.
   void resync() => state = ref.read(authServiceProvider).isSignedIn;
 }

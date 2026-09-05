@@ -142,6 +142,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 subtitle: 'Permanently deletes every entry on this device',
                 onTap: () => _clearAll(context),
               ),
+              // Google Play requires an in-app route to account deletion for
+              // any app that lets an account be created. Signing out is not
+              // deletion and does not satisfy it.
+              _Row(
+                icon: Icons.person_remove_outlined,
+                title: 'Delete account',
+                subtitle: 'Removes your account and all dreams on this device',
+                onTap: () => _deleteAccount(context),
+              ),
             ],
           ),
           const SizedBox(height: 28),
@@ -196,6 +205,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await ref
         .read(settingsServiceProvider)
         .setReminderEnabled(enable && _reminder);
+  }
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: const Text('Delete your account?'),
+        content: const Text(
+          'This permanently deletes your account and every dream stored on '
+          'this device. It cannot be undone.\n\n'
+          'An active subscription is billed by Google Play and is not '
+          'cancelled by this — cancel it in Play first if you have one.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(d, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            onPressed: () => Navigator.pop(d, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref.read(signedInProvider.notifier).deleteAccount();
+      if (!mounted) return;
+      ref.read(appGateProvider.notifier).recompute();
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    }
   }
 
   Future<void> _openPlaySubscriptions() async {

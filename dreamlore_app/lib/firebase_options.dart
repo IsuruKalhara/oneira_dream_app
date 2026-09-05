@@ -62,10 +62,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '387756452759',
     projectId: 'dreamlore-app-51321',
     storageBucket: 'dreamlore-app-51321.firebasestorage.app',
-    androidClientId:
-        '387756452759-rou4fdrhq11tqkcgrgabidsn2i96agfu.apps.googleusercontent.com',
-    iosClientId:
-        '387756452759-shddn70qu8b9nio6sa9qb6j3ppekra0i.apps.googleusercontent.com',
+    androidClientId: '387756452759-7end5g97711f3ok2r0g8j338rnqjo1u1.apps.googleusercontent.com',
+    iosClientId: '387756452759-shddn70qu8b9nio6sa9qb6j3ppekra0i.apps.googleusercontent.com',
     iosBundleId: 'com.bitfuzed.dreamlore',
   );
 }

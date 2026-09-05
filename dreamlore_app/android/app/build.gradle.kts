@@ -1,3 +1,15 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+// Release signing. The keystore and its passwords live in android/key.properties
+// and android/dreamlore-release.jks, both gitignored — losing them means never
+// being able to update the app on Play again, so they belong in a password
+// manager, not just on this laptop.
+val keystoreProperties = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) load(FileInputStream(f))
+}
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -41,11 +53,29 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            if (keystoreProperties.containsKey("storeFile")) {
+                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Falls back to debug only when key.properties is absent (a fresh
+            // clone). A debug-signed bundle is rejected by Play, so the warning
+            // below is the difference between finding out here and finding out
+            // after an upload.
+            signingConfig = if (keystoreProperties.containsKey("storeFile")) {
+                signingConfigs.getByName("release")
+            } else {
+                logger.warn("WARNING: android/key.properties missing — signing release with DEBUG keys. Play will reject this bundle.")
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

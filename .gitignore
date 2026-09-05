@@ -28,3 +28,8 @@ dreamlore/data/vectorize.ndjson
 
 # ── Separate project, its own git repo — never commit into this one ──
 timbre_voice_journal/
+
+# ── Android release signing — NEVER commit ──
+**/key.properties
+**/*.jks
+**/*.keystore

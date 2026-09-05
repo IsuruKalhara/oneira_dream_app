@@ -1,4 +1,9 @@
+import 'dart:async';
+
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,12 +39,33 @@ Future<void> main() async {
     // platform config file is missing. Failure is not fatal: the journal never
     // depends on an account, so start anyway and let the sign-in screen
     // explain what's missing. See SHIP.md § Sign-in.
+    var firebaseReady = false;
     try {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      firebaseReady = true;
     } catch (_) {
       // Unconfigured: AuthService.isConfigured stays false.
+    }
+
+    if (firebaseReady) {
+      // Crash reporting. Off in debug, so local stack traces stay in the
+      // console and development never pollutes the production crash list.
+      final crashlytics = FirebaseCrashlytics.instance;
+      await crashlytics.setCrashlyticsCollectionEnabled(!kDebugMode);
+      final presentError = FlutterError.onError;
+      FlutterError.onError = (details) {
+        presentError?.call(details);
+        if (!kDebugMode) crashlytics.recordFlutterFatalError(details);
+      };
+      // Errors raised outside the widget tree — async gaps, platform channels
+      // — never reach FlutterError.onError, so they need their own hook.
+      PlatformDispatcher.instance.onError = (error, stack) {
+        if (!kDebugMode) crashlytics.recordError(error, stack, fatal: true);
+        return true;
+      };
+      await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(!kDebugMode);
     }
 
     runApp(

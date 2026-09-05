@@ -19,21 +19,30 @@ contact `[PRIVACY EMAIL]`. This policy explains what we do with your information
 | Data | Purpose | Where it lives |
 |---|---|---|
 | Dream transcripts & interpretations | Your journal | **On your device only** (local database) |
-| Dream text (transient) | To generate an interpretation | Sent to our proxy → AI provider at request time; not retained by us |
-| Anonymous device token (random ID) | Enforce fair-use limits and your subscription | Our proxy (rate-limit counters) |
-| Subscription status | Unlock paid features | Managed by the app store and RevenueCat |
-| Diagnostics/crash data (if enabled) | Fix bugs | `[ANALYTICS PROVIDER or "none"]` |
+| Dream pictures (Plus) | Illustrate a dream you chose to paint | Generated on request, stored **on your device only** |
+| Dream text (transient) | To generate an interpretation, and a picture if you ask | Sent to our proxy → OpenAI at request time; not retained by us |
+| Anonymous device token (random ID) | Enforce fair-use limits | Our proxy (rate-limit counters, auto-expiring) |
+| Email address and display name | Identify your account so a subscription follows you | Firebase Authentication (Google) |
+| Subscription status | Unlock paid features | Google Play Billing, verified by our proxy |
+| Crash reports and app-usage events | Diagnose crashes and see which screens are used | Firebase Crashlytics and Analytics, **release builds only** |
 
-We do **not** collect your name, email, contacts, location, or audio recordings.
+Sign-in is optional for using the journal, but required to hold a subscription.
+
+We do **not** collect your contacts, your location, or your audio. Speech is
+transcribed **on your device**; the recording itself never leaves it.
 
 ## Third parties (sub-processors)
-- **Anthropic (Claude)** — generates interpretations from dream text. `[link]`
-- **`[OpenAI / Voyage AI]`** — converts dream text to a numeric vector for retrieval.
-- **RevenueCat** — subscription management. `[link]`
-- **Apple / Google** — app distribution and payment processing.
+- **OpenAI** — generates the interpretation from your dream text, and the picture
+  if you ask for one. Receives the dream text, never your identity.
+- **Google (Firebase)** — Authentication (email, display name), Crashlytics and
+  Analytics.
+- **Google Play** — app distribution, payment processing and subscription state.
+- **Cloudflare** — hosts our proxy, which holds the API keys and the rate-limit
+  counters so the app never has to.
 
-We send these providers only what is necessary (the dream text and your anonymous
-token), never your identity. We do not sell personal data.
+Retrieval runs inside our own proxy against a public-domain library shipped with
+it, so no third party is involved in choosing which passages you are shown. We do
+not sell personal data.
 
 ## Retention
 Journal data remains on your device until you delete it (Settings → "Clear all
@@ -41,8 +50,14 @@ dreams", or by uninstalling). Our proxy keeps only short-lived, anonymous rate-l
 counters (auto-expiring). Dream text is not persisted by us after a reading is returned.
 
 ## Your choices & rights
-- Delete everything anytime in the app (Settings → Clear all dreams).
-- Because we hold no account and no identifying data, there is no profile to export.
+- **Delete your dreams** anytime: Settings → Clear all dreams.
+- **Delete your account and all local dreams**: Settings → Delete account. This
+  removes your Firebase account permanently and cannot be undone. If you have
+  uninstalled the app, email `[PRIVACY EMAIL]` and we will delete it for you.
+- Deleting your account does **not** cancel a Google Play subscription — cancel
+  that in Google Play, or you will continue to be billed.
+- Because the journal itself lives on your device, there is no server-side copy of
+  your dreams for us to export.
 - If you are in the EEA/UK (GDPR) or California (CCPA/CPRA), you have rights to
   access/delete/etc.; contact `[PRIVACY EMAIL]`. `[Confirm obligations with counsel.]`
 

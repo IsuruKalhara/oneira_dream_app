@@ -24,6 +24,16 @@ class SignInCancelledException implements Exception {
   const SignInCancelledException();
 }
 
+/// Firebase refuses to delete an account whose sign-in is more than a few
+/// minutes old. That is a security feature, not a bug — the fix is to sign in
+/// again and retry, which is what the UI says.
+class ReauthRequiredException implements Exception {
+  const ReauthRequiredException();
+  @override
+  String toString() =>
+      'For your security, please sign in again before deleting your account.';
+}
+
 /// Any other sign-in failure, with a message safe to show.
 class SignInFailedException implements Exception {
   const SignInFailedException(this.message);
@@ -157,6 +167,40 @@ class AuthService {
         await GoogleSignIn.instance.signOut();
       } catch (_) {
         // Same reasoning.
+      }
+    }
+    await _settings.clearAccount();
+  }
+
+  /// Deletes the account itself, not just the session.
+  ///
+  /// Google Play requires any app that lets a user create an account to also
+  /// let them delete it from inside the app. Sign-out is not deletion: it
+  /// leaves the Firebase user, and with it the identifier everything else is
+  /// keyed to.
+  ///
+  /// Local dreams are the caller's responsibility — they are deleted first, so
+  /// that a failure here can never leave the journal wiped and the account
+  /// still alive.
+  Future<void> deleteAccount() async {
+    if (isConfigured) {
+      final user = _auth.currentUser;
+      if (user != null) {
+        try {
+          await user.delete();
+        } on fb.FirebaseAuthException catch (e) {
+          if (e.code == 'requires-recent-login') {
+            throw const ReauthRequiredException();
+          }
+          throw SignInFailedException(e.message ?? "Couldn't delete the account.");
+        }
+      }
+    }
+    if (_googleReady) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (_) {
+        // The account is already gone; local state below is what gates the app.
       }
     }
     await _settings.clearAccount();

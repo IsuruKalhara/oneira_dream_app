@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "387756452759-7end5g97711f3ok2r0g8j338rnqjo1u1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bitfuzed.dreamlore",
+            "certificate_hash": "8dd6a0803870a66f56de3aedf43710fe96e4021b"
+          }
+        },
+        {
           "client_id": "387756452759-rou4fdrhq11tqkcgrgabidsn2i96agfu.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

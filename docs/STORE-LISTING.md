@@ -42,7 +42,8 @@ against Apple/Google questionnaires. Not directed at children.
   subscription to the account).
 - **Data not linked to you:** Purchases (subscription status); "Other data" — dream
   text sent transiently to the AI provider for interpretation and, on Plus, for the
-  dream picture (not stored by you).
+  dream picture (not stored by you); **Diagnostics** — crash reports and app usage
+  (Firebase Crashlytics + Analytics, release builds only, both off in debug).
 Disclose the AI-provider processing; do not claim "no data leaves the device" — the
 dream *text* does, at interpretation time. (Audio does not.)
 
@@ -50,6 +51,26 @@ dream *text* does, at interpretation time. (Audio does not.)
 Mirror the above: Google sign-in (email), transient dream text sent for processing
 (reading + Plus picture), purchases handled by Google Play Billing and verified
 server-side. Dreams, audio and pictures are stored only on the device.
+
+Also declare, because the app now ships them:
+- **Crash logs** and **Diagnostics** — Firebase Crashlytics, collected, not linked
+  to the user, not used for tracking. Enabled in release builds only.
+- **App interactions** — Firebase Analytics, same treatment.
+Both must be listed even though they are Google's own SDKs; "we didn't write it"
+is not an exemption.
+
+## Account deletion (Play policy — mandatory)
+Any app that lets an account be created must offer deletion **both** in-app and at
+a public URL, and the URL must be reachable without installing the app.
+
+- **In-app:** Settings → Delete account. Removes the Firebase user and every dream
+  on the device, behind a confirmation that says it cannot be undone.
+- **URL:** must be live before submission and entered in the Play Console under
+  *App content → Data safety → Account deletion*. Suggested:
+  `https://tropicalai.net/dreamlore/delete-account` — a static page explaining the
+  in-app route plus an email address for anyone who has uninstalled.
+- Deleting the account does **not** cancel a Play subscription; the dialog says so,
+  because a user who expects otherwise will file a refund dispute.
 
 ## App review notes (paste into the review-notes field)
 > Dreamlore transcribes a spoken dream on-device and returns an AI-generated reflective
