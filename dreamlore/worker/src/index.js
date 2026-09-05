@@ -198,7 +198,27 @@ export default {
         const img = await generateImage({ apiKey: env.OPENAI_API_KEY, prompt });
         return json({ image: img.b64, mime: img.mime, model: img.model, quota: { tier, day: quota.day, month: quota.month } });
       } catch (e) {
-        return json({ error: String(e?.message || e) }, 502);
+        // The unit was reserved before the call, so give it back: the user got
+        // no picture.
+        await refundQuota(env, deviceToken, 'imagine');
+        const msg = String(e?.message || e);
+        // The image model refuses far more than the text one, and on dreams
+        // that are in no way unsafe — "flying over a wide river at dawn" was
+        // refused during testing. Relaying the provider's wording would blame
+        // the dreamer for their dream, so say what is true instead: it cannot
+        // be painted, the reading is unaffected, and nothing was spent.
+        if (/safety system|content policy|rejected by/i.test(msg)) {
+          return json(
+            {
+              error:
+                "This dream couldn't be painted. The reading is unaffected, " +
+                'and no picture was counted against your allowance.',
+              refusal: true,
+            },
+            422,
+          );
+        }
+        return json({ error: msg }, 502);
       }
     }
 
@@ -338,6 +358,29 @@ async function kvInc(env, k) {
 // Ceilings that hold regardless of what the client claims to be. The global one
 // is the backstop on the bill: whatever else goes wrong, the deployment cannot
 // make more than GLOBAL_DAILY_CALLS paid model calls in a day.
+/// Gives a consumed unit back. A paid user who asked for three pictures a day
+/// and received a provider refusal has had one taken for nothing, and "you
+/// used your allowance on an error" is the kind of thing people ask for a
+/// refund over. The abuse ceilings still bound the budget, so handing this one
+/// back cannot be farmed into free generation.
+async function refundQuota(env, id, endpoint) {
+  const dk = `rl:${id}:${endpoint}:d:${dayKey()}`;
+  const mk = `rl:${id}:${endpoint}:m:${monthKey()}`;
+  try {
+    for (const k of [dk, mk]) {
+      const v = await kvGet(env, k);
+      if (v > 0) {
+        await env.RATE_LIMIT.put(k, String(v - 1), {
+          expirationTtl: 60 * 60 * 24 * 40,
+        });
+      }
+    }
+  } catch {
+    // Best effort. Failing to refund must never turn into a 500 on top of the
+    // error the user already had.
+  }
+}
+
 async function checkAbuseCeilings(env, request) {
   const day = dayKey();
   const globalCap = Number(env.GLOBAL_DAILY_CALLS || GLOBAL_DAILY_CALLS);
