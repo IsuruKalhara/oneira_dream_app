@@ -140,7 +140,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _Row(
                 icon: Icons.ios_share,
                 title: 'Tell a friend',
-                subtitle: 'Share Dreamlore — no account needed to try it',
+                subtitle: 'Send someone the link',
                 onTap: () => ShareCard.shareApp(context),
               ),
               _Row(

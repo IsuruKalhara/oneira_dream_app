@@ -69,7 +69,7 @@ class ShareCard {
         text:
             "I've been using ${Config.appName} to write my dreams down when I "
             'wake up. It reads them against real dream books and quotes the '
-            'actual passages, and the journal stays on your phone.\n\n'
+            'actual passages, and the journal is saved on your phone.\n\n'
             '$storeUrl',
         subject: '${Config.appName} — a dream journal that quotes real books',
         sharePositionOrigin: box != null
