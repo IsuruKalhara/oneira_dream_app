@@ -197,7 +197,9 @@ class AuthService {
           if (e.code == 'requires-recent-login') {
             throw const ReauthRequiredException();
           }
-          throw SignInFailedException(e.message ?? "Couldn't delete the account.");
+          throw SignInFailedException(
+            e.message ?? "Couldn't delete the account.",
+          );
         }
       }
     }

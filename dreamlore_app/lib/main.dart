@@ -84,13 +84,14 @@ Future<void> main() async {
         if (!kDebugMode) crashlytics.recordError(error, stack, fatal: true);
         return true;
       };
-      await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(!kDebugMode);
+      await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
+        !kDebugMode,
+      );
     }
     // Telemetry stays a no-op unless Firebase actually started, so a failed
     // init degrades to "no analytics" rather than throwing on every event.
     Telemetry.enable(ready: firebaseReady);
-    if (firebaseReady) {
-    }
+    if (firebaseReady) {}
 
     runApp(
       ProviderScope(

@@ -70,6 +70,18 @@ android {
             // clone). A debug-signed bundle is rejected by Play, so the warning
             // below is the difference between finding out here and finding out
             // after an upload.
+            // R8: shrinks and obfuscates the Java/Kotlin layer and strips
+            // unused resources. Dart is already compiled to native AOT, so this
+            // is mostly size — but it also removes the readable class names a
+            // tamperer would start from. Verified on a real device before
+            // shipping, because R8 breaks reflection-based code at RUNTIME, not
+            // at build time.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             signingConfig = if (keystoreProperties.containsKey("storeFile")) {
                 signingConfigs.getByName("release")
             } else {

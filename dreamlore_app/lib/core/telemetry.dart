@@ -46,17 +46,17 @@ class Telemetry {
     required int dreamChars,
     required String tier,
   }) => _log('dream_interpreted', {
-        'elapsed_ms': elapsedMs,
-        // Bucketed, not exact: a length is a weak fingerprint, and knowing
-        // "short/medium/long" answers every product question an exact count
-        // would.
-        'length_bucket': dreamChars < 200
-            ? 'short'
-            : dreamChars < 800
-                ? 'medium'
-                : 'long',
-        'tier': tier,
-      });
+    'elapsed_ms': elapsedMs,
+    // Bucketed, not exact: a length is a weak fingerprint, and knowing
+    // "short/medium/long" answers every product question an exact count
+    // would.
+    'length_bucket': dreamChars < 200
+        ? 'short'
+        : dreamChars < 800
+        ? 'medium'
+        : 'long',
+    'tier': tier,
+  });
 
   static Future<void> dreamSaved() => _log('dream_saved');
 

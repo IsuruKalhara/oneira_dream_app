@@ -381,7 +381,7 @@ class PrivacyStep extends StatelessWidget {
       children: [
         const BigTitle('Private\nby default'),
         const SizedBox(height: 12),
-        const Sub('No account. No sign-in. No profile to build.'),
+        const Sub('Your journal is yours. No profile, no tracking.'),
         const SizedBox(height: 26),
         const InfoCard(
           icon: Icons.graphic_eq,
@@ -394,8 +394,9 @@ class PrivacyStep extends StatelessWidget {
           icon: Icons.lock_outline,
           title: 'Your journal stays here',
           body:
-              'Entries live in this app, on this device. There is no cloud '
-              'copy and no way for us to read them.',
+              'Entries live in this app, on this device — there is no cloud '
+              'copy. To write a reading, the words of that one dream are sent '
+              'to our AI provider and are not kept.',
         ),
         // Being straight about what does leave is both the honest answer and
         // the one Apple's privacy label requires — see docs/STORE-LISTING.md.

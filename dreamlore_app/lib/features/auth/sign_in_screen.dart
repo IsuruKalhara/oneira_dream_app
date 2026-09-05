@@ -143,7 +143,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   const Reveal(
                     index: 4,
                     child: Text(
-                      'One tap. Your journal stays on this phone.',
+                      'One tap. Your journal is saved on this phone.',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12.5, color: Ob.muted),
                     ),
@@ -163,8 +163,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   const Reveal(
                     index: 5,
                     child: Text(
+                      // Accurate, not merely reassuring: the journal is
+                      // local, but the dream text IS sent away to write the
+                      // reading. Claiming otherwise here contradicts the
+                      // privacy policy and is exactly the claim
+                      // docs/STORE-LISTING.md warns against making.
                       'Signing in only carries your subscription across '
-                      'devices. Your dreams never leave this phone.\n'
+                      'devices. Your journal is saved on this phone; to write '
+                      'a reading your dream text is sent to our AI provider '
+                      'and is not kept.\n'
                       'By continuing you agree to the Terms of Use and '
                       'Privacy Policy.',
                       textAlign: TextAlign.center,

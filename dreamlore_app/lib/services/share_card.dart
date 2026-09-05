@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -38,19 +39,42 @@ class ShareCard {
         : null; // iPad share popovers need an anchor; Android ignores it.
 
     final png = await compose(imageBytes: imageBytes, dream: dream);
+    // The card has to exist on disk: share_plus hands Android the file's
+    // path, so an XFile carrying only bytes and a path we never wrote
+    // silently produced a share sheet with nothing in it.
     final dir = await getTemporaryDirectory();
-    final file = XFile.fromData(
-      png,
-      mimeType: 'image/png',
-      name: 'dreamlore-dream.png',
-      path: p.join(dir.path, 'dreamlore-dream.png'),
-    );
+    final path = p.join(dir.path, 'dreamlore-dream.png');
+    await File(path).writeAsBytes(png, flush: true);
+
     await SharePlus.instance.share(
       ShareParams(
-        files: [file],
-        text: 'My dream, painted by ${Config.appName}. $storeUrl',
+        files: [
+          XFile(path, mimeType: 'image/png', name: 'dreamlore-dream.png'),
+        ],
+        text: 'My dream, painted by ${Config.appName}.\n$storeUrl',
         subject: 'A dream, painted',
         sharePositionOrigin: origin,
+      ),
+    );
+  }
+
+  /// Shares the app itself — the "tell a friend" route, and the one piece of
+  /// marketing that costs nothing and carries a real recommendation. Text
+  /// only: a link is what gets tapped in a chat, and an image would push the
+  /// link into an attachment on several platforms.
+  static Future<void> shareApp(BuildContext context) async {
+    final box = context.findRenderObject() as RenderBox?;
+    await SharePlus.instance.share(
+      ShareParams(
+        text:
+            "I've been using ${Config.appName} to write my dreams down when I "
+            'wake up. It reads them against real dream books and quotes the '
+            'actual passages, and the journal stays on your phone.\n\n'
+            '$storeUrl',
+        subject: '${Config.appName} — a dream journal that quotes real books',
+        sharePositionOrigin: box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null,
       ),
     );
   }

@@ -6,8 +6,10 @@ import '../../core/config.dart';
 import '../../core/legal.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../providers/providers.dart';
+import '../../services/share_card.dart';
 import '../../ui/night.dart';
 import '../../ui/scaffold.dart';
+import '../../widgets/brand_mark.dart';
 import '../paywall/paywall_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -136,6 +138,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _Group(
             children: [
               _Row(
+                icon: Icons.ios_share,
+                title: 'Tell a friend',
+                subtitle: 'Share Dreamlore — no account needed to try it',
+                onTap: () => ShareCard.shareApp(context),
+              ),
+              _Row(
+                icon: Icons.star_outline,
+                title: 'Rate Dreamlore',
+                subtitle: 'Reviews are how people find it',
+                trailing: const Icon(
+                  Icons.open_in_new,
+                  size: 17,
+                  color: Ob.muted,
+                ),
+                onTap: () =>
+                    openLegalUrl(context, 'Google Play', ShareCard.storeUrl),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _Group(
+            children: [
+              _Row(
                 icon: Icons.delete_outline,
                 tint: t.colorScheme.error,
                 title: 'Clear all dreams',
@@ -153,7 +178,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 22),
+          const _About(),
+          const SizedBox(height: 20),
           const Text(
             'Dreamlore · reflective dream journal\n'
             'not medical or psychological advice',
@@ -392,6 +419,100 @@ class _Row extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// What this app is, in the two sentences someone actually needs, plus the
+/// books it quotes. Sits at the foot of Settings because that is where people
+/// look for it, and because "what is this reading based on" is the question
+/// the whole product answers.
+class _About extends StatelessWidget {
+  const _About();
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const BrandMark(size: 40),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    Config.appName,
+                    style: Ob.serif(size: 22, weight: FontWeight.w500),
+                  ),
+                  Text(
+                    'Version ${Config.version}',
+                    style: const TextStyle(fontSize: 11.5, color: Ob.muted),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Speak a dream when you wake and Dreamlore writes it down, then '
+            'reads it against three public-domain books on dreaming — quoting '
+            'the passages rather than inventing a meaning.',
+            style: TextStyle(fontSize: 13.5, height: 1.55, color: Ob.parchment),
+          ),
+          const SizedBox(height: 14),
+          Text('THE LIBRARY', style: Ob.eyebrow(context)),
+          const SizedBox(height: 8),
+          for (final b in const [
+            ('The Interpretation of Dreams', 'Sigmund Freud, 1899'),
+            ('Dream Psychology', 'Sigmund Freud, 1920'),
+            (
+              'Ten Thousand Dreams Interpreted',
+              'Gustavus Hindman Miller, 1901',
+            ),
+          ])
+            Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${b.$1}  ',
+                      style: Ob.serif(
+                        size: 13.5,
+                        style: FontStyle.italic,
+                        height: 1.3,
+                      ),
+                    ),
+                    TextSpan(
+                      text: b.$2,
+                      style: const TextStyle(fontSize: 11.5, color: Ob.muted),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 6),
+          Text(
+            'All three are out of copyright, which is why the app can quote '
+            'them in full rather than paraphrase.',
+            style: TextStyle(
+              fontSize: 11.5,
+              height: 1.45,
+              color: primary.withValues(alpha: 0.85),
+            ),
+          ),
+        ],
       ),
     );
   }

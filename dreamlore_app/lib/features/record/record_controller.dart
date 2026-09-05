@@ -25,6 +25,7 @@ class RecordState {
   final Interpretation? interpretation;
   final QuotaInfo? quota;
   final QuotaExceededException? quotaError;
+
   /// The thrown object, not its text. `Friendly.of` classifies a DioException
   /// by type — offline vs timeout vs 5xx — and `e.toString()` threw that away,
   /// so every network failure surfaced as "Something went sideways" instead of
@@ -159,11 +160,13 @@ class RecordController extends Notifier<RecordState> {
         savedId: id,
       );
       ref.invalidate(quotaProvider);
-      unawaited(Telemetry.dreamInterpreted(
-        elapsedMs: DateTime.now().difference(started).inMilliseconds,
-        dreamChars: text.length,
-        tier: res.quota?.tier ?? 'free',
-      ));
+      unawaited(
+        Telemetry.dreamInterpreted(
+          elapsedMs: DateTime.now().difference(started).inMilliseconds,
+          dreamChars: text.length,
+          tier: res.quota?.tier ?? 'free',
+        ),
+      );
       // Plus: the picture is part of the reading, not a second ask. Free: the
       // card shows the invitation, and the upsell is one tap away.
       if (ref.read(entitlementProvider)) unawaited(imagine());

@@ -12,6 +12,9 @@ class Config {
 
   static const String appName = 'Dreamlore';
 
+  /// Shown in Settings → About. Keep in step with `version:` in pubspec.yaml.
+  static const String version = '1.0.0';
+
   /// Debug builds only: pretend this device is on Plus, so the picture flow
   /// can be exercised against a local proxy on a phone that has Play (whose
   /// startup restore would otherwise clear any entitlement). The real backend
